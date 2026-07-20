@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { LoginComponent } from './login/login.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
+  imports: [LoginComponent], // Importamos tu componente encapsulado
+  template: '<app-login></app-login>', // Renderizamos directamente tu login aquí
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'DragonCodeBeta';
+  // Archivo limpio. Delegamos toda la responsabilidad gráfica al hijo.
 }

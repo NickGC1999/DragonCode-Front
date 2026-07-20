@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+/* src/styles.scss */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100vh;
+  /* Un color oscuro por si la pantalla es ultra ancha y la cueva se ajusta (contain) */
+  background-color: #0d0d12; 
+  overflow: hidden; /* Evita barras de scroll innecesarias en el layout maestro */
+}

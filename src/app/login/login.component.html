@@ -1,0 +1,39 @@
+<!-- El contenedor maestro con el fondo de la cueva -->
+<main class="login-layout">
+  
+  <!-- La Capa Programática de Runas (Ahora sí encapsulada correctamente) -->
+  <div class="runes-layer">
+    @for (rune of runes; track $index) {
+      <span class="rune"
+            [style.top]="rune.top"
+            [style.left]="rune.left"
+            [style.color]="rune.color"
+            [style.animation-delay]="rune.delay"
+            [style.animation-duration]="rune.duration"
+            [style.font-size]="rune.fontSize">
+        {{ rune.symbol }}
+      </span>
+    }
+  </div>
+
+  <!-- La columna central flexible -->
+  <section class="content-column">
+    
+    <!-- Avatar dinámico -->
+    <div class="avatar-container">
+      <img [src]="currentAvatar" alt="Avatar de Draco" class="draco-avatar">
+    </div>
+
+    <!-- Título del juego -->
+    <div class="title-container">
+      <img src="assets/images/login/titulo.png" alt="Dragon Code" class="game-title">
+    </div>
+
+    <!-- Contenedor del Formulario -->
+    <div class="form-container">
+      <!-- Aquí adentro inyectaremos el formulario Reactivo -->
+    </div>
+
+  </section>
+
+</main>

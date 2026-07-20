@@ -1,0 +1,172 @@
+/* Motor de luz para el título (Celeste tenue que coincide con el borde de la tabla) */
+@keyframes titleGlow {
+  0%   { filter: drop-shadow(0 0 4px rgba(127, 255, 212, 0.2)); }
+  50%  { filter: drop-shadow(0 0 12px rgba(127, 255, 212, 0.6)); } /* Expansión máxima suave */
+  100% { filter: drop-shadow(0 0 4px rgba(127, 255, 212, 0.2)); }
+}
+
+/* El Layout Maestro */
+/* Motor de animación para las runas */
+@keyframes pulseRunes {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* Motor de parpadeo individual */
+@keyframes twinkleRune {
+  0%   { opacity: 0; }     /* Invisibles al iniciar */
+  50%  { opacity: 0.85; }  /* Aparecen suavemente */
+  100% { opacity: 0; }     /* Vuelven a desaparecer por completo */
+}
+
+/* El contenedor que agrupa todas las runas */
+.runes-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0; /* Al fondo */
+  pointer-events: none; /* Que no bloqueen clics */
+  overflow: hidden;
+}
+
+/* El estilo base de cada símbolo */
+.rune {
+  position: absolute;
+  font-family: monospace; /* Estilo código/retro */
+  opacity: 0; /* Ocultas por defecto hasta que la animación dicte lo contrario */
+  
+  /* Conectamos con el keyframe. El tiempo y el delay se lo inyecta Angular en el HTML */
+  animation-name: twinkleRune;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.login-layout::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1; /* Por encima de las runas */
+  pointer-events: none; /* Permite hacer clic a través de la cueva */
+  
+  /* El filtro oscuro y la imagen de tu mockup */
+  background-image: 
+    linear-gradient(rgba(22, 19, 32, 0.65), rgba(22, 19, 32, 0.65)),
+    url('../../assets/images/login/fondo.png');
+  background-size: cover, contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.login-layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+
+  /* Solo el color base para fusionar con la cueva */
+  background-color: #13111f;
+  overflow: hidden;
+  
+  /* Flexbox para centrar la columna perfectamente en medio de la cueva */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 1. La columna principal (Limpia y responsiva) */
+.content-column {
+  position: relative;
+  z-index: 2; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  /* Flexbox se encarga de la cercanía. 1rem une a Draco con el Título naturalmente */
+  gap: 1rem; 
+  
+  /* En lugar de romper el margen, trasladamos visualmente el bloque hacia la luz */
+  transform: translateY(1vh);
+}
+
+/* 2. El Avatar */
+.draco-avatar {
+  height: 215px; 
+  width: auto;
+  object-fit: contain;
+  animation: float 15s ease-in-out infinite; 
+  
+  margin-bottom: -100px;
+}
+
+/* 3. El título y su solapamiento seguro */
+.title-container {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  
+  /* ELIMINADO: height: 300px; (Dejamos que la imagen dicte su altura) */
+  margin-bottom: -23%; /* Mantenemos tu excelente cálculo de solapamiento */
+}
+
+.game-title {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  object-fit: contain;
+
+  /* NUEVO: Aplicamos el resplandor pulsante de 4 segundos */
+  animation: titleGlow 4s ease-in-out infinite;
+  
+  /* BUENA PRÁCTICA: Preparamos la GPU para evitar repintados innecesarios */
+  will-change: filter;
+}
+
+/* 4. La Tabla de Sesión */
+.form-container {
+  /* CAMBIO: Usamos min-height para que la caja crezca si metemos muchos inputs */
+  min-height: 580px; 
+  position: relative;
+  z-index: 2; 
+  width: 100%;
+  max-width: 850px;
+  aspect-ratio: 16 / 9; 
+  
+  background-image: url('../../assets/images/login/tablasession.png');
+  background-size: 100% 100%; 
+  background-repeat: no-repeat;
+  background-position: center;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10% 15%;
+}
+
+/* Bonus: Animación */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* 5. El Media Query (Ajustes exactos para Celular) */
+@media (max-width: 768px) {
+  .content-column {
+    transform: translateY(-2vh); /* En móvil sube menos para no chocar arriba */
+    gap: 0.5rem; 
+  }
+  
+  .title-container {
+    margin-bottom: -22%; 
+  }
+  
+  .draco-avatar {
+    height: 160px; /* Draco se encoge para dar prioridad al formulario */
+  }
+
+  .form-container {
+    padding: 12% 10%;
+  }
+}
