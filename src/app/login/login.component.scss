@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+
 /* Motor de luz para el título (Celeste tenue que coincide con el borde de la tabla) */
 @keyframes titleGlow {
   0%   { filter: drop-shadow(0 0 4px rgba(127, 255, 212, 0.2)); }
@@ -89,12 +92,14 @@
 
 /* 2. El Avatar */
 .draco-avatar {
-  height: 215px; 
+  height: 250px; 
   width: auto;
   object-fit: contain;
   animation: float 15s ease-in-out infinite; 
   
   margin-bottom: -100px;
+  /* Draco nunca superará el 15% del alto de la pantalla */
+  max-height: 25vh;
 }
 
 /* 3. El título y su solapamiento seguro */
@@ -106,7 +111,7 @@
   justify-content: center;
   
   /* ELIMINADO: height: 300px; (Dejamos que la imagen dicte su altura) */
-  margin-bottom: -23%; /* Mantenemos tu excelente cálculo de solapamiento */
+  margin-bottom: -21.5%; /* Mantenemos tu excelente cálculo de solapamiento */
 }
 
 .game-title {
@@ -120,17 +125,21 @@
   
   /* BUENA PRÁCTICA: Preparamos la GPU para evitar repintados innecesarios */
   will-change: filter;
+  
+  
 }
 
-/* 4. La Tabla de Sesión */
+/* --- 1. CONTENEDOR PRINCIPAL --- */
 .form-container {
-  /* CAMBIO: Usamos min-height para que la caja crezca si metemos muchos inputs */
-  min-height: 580px; 
+  font-family: 'Share Tech Mono', monospace;
   position: relative;
   z-index: 2; 
-  width: 100%;
-  max-width: 850px;
-  aspect-ratio: 16 / 9; 
+  width: 850px; 
+  max-width: 90vw; 
+  
+  /* CAMBIO: Altera la proporción para darle un ~12% más de longitud vertical */
+  aspect-ratio: 16 / 10; 
+  box-sizing: border-box; 
   
   background-image: url('../../assets/images/login/tablasession.png');
   background-size: 100% 100%; 
@@ -139,34 +148,185 @@
 
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; /* Distribuye los elementos usando el nuevo espacio */
   align-items: center;
-  padding: 10% 15%;
+  
+  /* AJUSTE MAESTRO:
+     - 16% Arriba: Baja el título 'INICIAR SESIÓN'.
+     - 19% Laterales: Mete los inputs para que no toquen las hojas ni el neón.
+     - 12% Abajo: Da espacio base a los enlaces. */
+  padding: 16% 19% 15% 19%;
+/* Si la pantalla es muy bajita, la tabla se encoge forzosamente 
+     para no superar el 50% de la pantalla. El aspect-ratio encogerá también su ancho. */
+  max-height: 70vh;
+  
 }
 
-/* Bonus: Animación */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+/* --- 2. TEXTOS Y JERARQUÍA --- */
+.login-form {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; 
+  font-family: 'Share Tech Mono', monospace;
+  color: #ffffff;
 }
 
-/* 5. El Media Query (Ajustes exactos para Celular) */
+.form-title {
+  text-align: center;
+  font-size: 1.45rem; /* Reducido ligeramente */
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem; /* Reducimos el margen inferior */
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7); 
+}
+
+/* --- 3. INPUTS COMPACTADOS --- */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem; /* Acerca la etiqueta al campo de texto */
+  margin-bottom: 0.8rem;
+  width: 100%;
+}
+
+.input-group label {
+  font-size: 0.85rem; /* Ajuste para mantener jerarquía visual */
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.8);
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.7rem 0.9rem; /* Campos un poco menos altos */
+  font-size: 0.95rem;
+  font-family: inherit; 
+  color: #ffffff;
+  
+  appearance: none;
+  outline: none;
+  border: 2px solid #3d2b1f; 
+  border-radius: 12px; 
+  
+  background-color: rgba(54, 34, 24, 0.85); 
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5); 
+  transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: #7fffd4; 
+}
+
+/* --- 4. ENLACES INFERIORES --- */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%; /* Obliga a los enlaces a usar los nuevos márgenes laterales */
+  margin-top: auto;
+}
+
+.retro-link {
+  color: #7fffd4; 
+  text-decoration: none;
+  font-size: 0.75rem; /* Letra de soporte más discreta */
+  letter-spacing: 1px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.retro-link:hover {
+  color: #ffffff;
+  text-shadow: 0 0 5px #7fffd4;
+}
+
+/* --- 5. COMPATIBILIDAD MÓVIL (Arquitectura Portrait) --- */
 @media (max-width: 768px) {
   .content-column {
-    transform: translateY(-2vh); /* En móvil sube menos para no chocar arriba */
-    gap: 0.5rem; 
-  }
-  
-  .title-container {
-    margin-bottom: -22%; 
-  }
-  
-  .draco-avatar {
-    height: 160px; /* Draco se encoge para dar prioridad al formulario */
+    transform: translateY(-2vh); /* Centramos el bloque en la pantalla */
+    gap: 0; /* Eliminamos el espacio automático para controlar todo manualmente */
   }
 
-  .form-container {
-    padding: 12% 10%;
+  .draco-avatar {
+    height: 160px; /* Tamaño imponente pero optimizado */
+    margin-bottom: -50px; /* Forzamos a Draco a pisar el título de DragonCode */
+    position: relative;
+    z-index: 4; /* Aseguramos que quede por encima de todo */
   }
+
+  .title-container {
+    /* Un solapamiento negativo más agresivo para que el título se pose sobre la tabla */
+    margin-bottom: -28%; 
+    z-index: 3;
+  }
+
+  .game-title {
+    width: 85vw; /* Título más ancho para hacer juego con la tabla */
+    max-width: 350px; 
+  }
+
+  /* LA NUEVA GEOMETRÍA VERTICAL */
+  .form-container {
+    width: 95vw; /* La ensanchamos casi al límite de la pantalla */
+    
+    /* Proporción vertical estricta. 3 de ancho por 4 de alto. 
+       Esto elimina el achatamiento y la hace ver alargada. */
+    aspect-ratio: 3 / 4.5; 
+    
+    background-image: url('../../assets/images/login/tablasession_mobile.png');
+    background-size: 100% 100%;
+    
+    padding: 28% 22% 20% 22%; 
+  }
+
+  /* Ajustes Tipográficos y de Inputs (se mantienen igual) */
+  .form-title {
+    font-size: 1.25rem; 
+    margin-bottom: 1.2rem;
+  }
+
+  .input-group {
+    margin-bottom: 0.8rem;
+  }
+
+  .input-group label {
+    font-size: 0.85rem;
+  }
+
+  .input-group input {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .retro-link {
+    font-size: 0.75rem;
+  }
+}
+
+/* Animación del brillo sutil celeste */
+@keyframes neonPulse {
+  0% { 
+    text-shadow: 0 0 2px rgba(0, 229, 255, 0.3); 
+  }
+  100% { 
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.918), 0 0 15px rgba(0, 229, 255, 0.918); 
+  }
+}
+
+/* Aplicado a tus enlaces inferiores */
+.retro-link {
+  /* Un color base celeste para empatar con el marco */
+  color: #bbf0f0; 
+  text-decoration: none;
+  cursor: pointer;
+  
+  /* La animación dura 2 segundos, se repite al infinito y va de ida y vuelta (alternate) */
+  animation: neonPulse 2s infinite alternate ease-in-out;
+  transition: all 0.3s ease;
+}
+
+/* Efecto al pasar el ratón (hover) para mayor interactividad en la versión web */
+.retro-link:hover {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 1), 0 0 20px rgba(0, 229, 255, 0.8);
 }
