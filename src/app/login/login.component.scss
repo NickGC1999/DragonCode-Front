@@ -1,3 +1,12 @@
+/* Motor de Animación de Respiración (Idle) para Draco */
+@keyframes dracoBreathing {
+  0%   { background-image: url('../../assets/images/draco/dracobase1.png'); }
+  25%  { background-image: url('../../assets/images/draco/dracobase2.png'); }
+  50%  { background-image: url('../../assets/images/draco/dracobase3.png'); }
+  75%  { background-image: url('../../assets/images/draco/dracobase2.png'); }
+  100% { background-image: url('../../assets/images/draco/dracobase1.png'); }
+}
+
 
 /* Motor de luz para el título (Celeste tenue que coincide con el borde de la tabla) */
 @keyframes titleGlow {
@@ -88,13 +97,30 @@
   transform: translateY(1vh);
 }
 
-/* 2. El Avatar */
+/* --- 2. El Avatar (Refactorizado para CSS puro) --- */
 .draco-avatar {
-  height: 250px; 
-  width: auto;
-  object-fit: contain;
-  animation: float 15s ease-in-out infinite; 
+  /* Mantenemos tus alturas originales de la versión funcional */
+  height: 250px;
   
+  /* REEMPLAZO: Como es un div, le damos una proporción de aspecto cuadrada 
+     para simular el comportamiento antiguo de 'width: auto' */
+  aspect-ratio: 4 / 1; 
+  
+  /* REEMPLAZO de object-fit: contain */
+  background-size: contain;
+  background-repeat: no-repeat;
+  
+  /* Anclamos la imagen abajo para que al cambiar de fotograma los pies no salten */
+  background-position: bottom center; 
+
+  /* FUSIÓN DE ANIMACIONES:
+     - dracoBreathing usa 'step-end' para hacer cortes secos estilo retro 16-bits (sin difuminado).
+     - float se mantiene exactamente igual que antes. */
+  animation: 
+    dracoBreathing 2.5s infinite step-end,
+    float 15s ease-in-out infinite;
+
+  /* Mantenemos tu posicionamiento responsivo intacto */
   margin-bottom: -100px;
   /* Draco nunca superará el 15% del alto de la pantalla */
   max-height: 25vh;
