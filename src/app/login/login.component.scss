@@ -81,7 +81,6 @@
   
   display: flex;
   justify-content: center;
-  align-items: center;
   
   /* EL SECRETO DE LOS DOS MUNDOS: 
      Fija la imagen de las runas a la cámara. Cuando el usuario haga scroll 
@@ -101,6 +100,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: auto;
   
   /* Flexbox se encarga de la cercanía. 1rem une a Draco con el Título naturalmente */
   gap: 1rem; 
@@ -319,35 +319,52 @@
 
   /* Ajustes Tipográficos y de Inputs (se mantienen igual) */
   .form-title {
-    font-size: 1.25rem; 
-    margin-bottom: 1.2rem;
-  }
-
-  .input-group {
+    font-size: 0.95rem; 
     margin-bottom: 0.8rem;
   }
 
+  .input-group {
+    margin-bottom: 0.6rem;
+  }
+
   .input-group label {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
   }
 
+  /* 4. Inputs: Reducimos su altura física bajando el padding interno */
   .input-group input {
-    padding: 0.7rem 0.8rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
   }
 
-  /* NUEVO: Contenedor flexible para separar los enlaces a la fuerza */
   .form-actions {
+    position: relative;
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: auto;
-    gap: 10px; 
+    
+    /* Esta es la clave: Como ahora los inputs son más pequeños, 
+       este auto margin empujará los enlaces hasta el fondo de la tabla */
+    margin-top: auto; 
+    gap: 10px;
   }
 
+  /* LA MAGIA DEL PSEUDO-ELEMENTO (Solo existirá en móviles) */
+  .form-actions::after {
+    content: '|'; /* El carácter que queremos inyectar */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* Centrado matemático perfecto e independiente del texto */
+    
+    /* Replicamos el estilo exacto de los botones */
+    color: #bbf0f0;
+    font-size: 0.65rem;
+    animation: neonPulse 2s infinite alternate ease-in-out;
+  }
+
+  /* 6. Enlaces: Ajuste milimétrico para que quepan horizontalmente */
   .retro-link {
-    font-size: 0.70rem; /* Reducido un pelito para que quepa mejor */
-    text-align: center;
+    font-size: 0.65rem; 
   }
 }
 
