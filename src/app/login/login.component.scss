@@ -200,6 +200,7 @@
 
 /* --- 2. TEXTOS Y JERARQUÍA --- */
 .login-form {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
@@ -314,7 +315,7 @@
     background-size: 100% 100%;
     
     /* Primer valor: Arriba y Abajo (20%) | Segundo valor: Derecha e Izquierda (14.5%) */
-    padding: 20% 13%;
+    padding: 20% 14%;
   }
 
   /* Ajustes Tipográficos y de Inputs (se mantienen igual) */
@@ -365,7 +366,18 @@
   /* 6. Enlaces: Ajuste milimétrico para que quepan horizontalmente */
   .retro-link {
     font-size: 0.65rem; 
-  }
+  flex: 1; /* Cada enlace ocupa el 50% de la tabla */
+}
+
+/* El primer enlace se estrella contra la pared izquierda */
+.retro-link:first-child {
+  text-align: left;
+}
+
+/* El último enlace se estrella contra la pared derecha */
+.retro-link:last-child {
+  text-align: right;
+}
 }
 
 /* Animación del brillo sutil celeste */
