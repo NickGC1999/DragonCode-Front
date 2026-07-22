@@ -68,18 +68,30 @@
 }
 
 .login-layout {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  /* CAMBIO CLAVE: Permite que el contenedor crezca si el contenido lo requiere */
+  min-height: 100vh; 
+  height: auto; 
 
-  /* Solo el color base para fusionar con la cueva */
+    /* Solo el color base para fusionar con la cueva */
   background-color: #13111f;
-  overflow: hidden;
   
-  /* Flexbox para centrar la columna perfectamente en medio de la cueva */
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: auto; /* Activa el scroll vertical solo cuando sea necesario */
+  
   display: flex;
   justify-content: center;
   align-items: center;
+  
+  /* EL SECRETO DE LOS DOS MUNDOS: 
+     Fija la imagen de las runas a la cámara. Cuando el usuario haga scroll 
+     hacia abajo, el formulario se moverá, pero el fondo inmersivo se quedará quieto. */
+  background-attachment: fixed; 
+  background-position: center;
+  background-size: cover;
+  
+  /* Un colchón arriba y abajo para que al hacer scroll nunca choque con los bordes */
+  padding: 40px 0; 
 }
 
 /* 1. La columna principal (Limpia y responsiva) */
@@ -224,6 +236,7 @@
 
 .input-group input {
   width: 100%;
+  box-sizing: border-box;
   padding: 0.7rem 0.9rem; /* Campos un poco menos altos */
   font-size: 0.95rem;
   font-family: inherit; 
@@ -291,7 +304,7 @@
 
   /* LA NUEVA GEOMETRÍA VERTICAL */
   .form-container {
-    width: 95vw; /* La ensanchamos casi al límite de la pantalla */
+    width: 92vw; /* La ensanchamos casi al límite de la pantalla */
     
     /* Proporción vertical estricta. 3 de ancho por 4 de alto. 
        Esto elimina el achatamiento y la hace ver alargada. */
@@ -300,7 +313,8 @@
     background-image: url('../../assets/images/login/tablasession_mobile.png');
     background-size: 100% 100%;
     
-    padding: 28% 22% 20% 22%; 
+    /* Primer valor: Arriba y Abajo (20%) | Segundo valor: Derecha e Izquierda (14.5%) */
+    padding: 20% 14.5%;
   }
 
   /* Ajustes Tipográficos y de Inputs (se mantienen igual) */
@@ -322,8 +336,18 @@
     font-size: 0.95rem;
   }
 
+  /* NUEVO: Contenedor flexible para separar los enlaces a la fuerza */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+    gap: 10px; 
+  }
+
   .retro-link {
-    font-size: 0.75rem;
+    font-size: 0.70rem; /* Reducido un pelito para que quepa mejor */
+    text-align: center;
   }
 }
 
