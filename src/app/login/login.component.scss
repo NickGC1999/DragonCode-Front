@@ -7,6 +7,23 @@
   100% { background-image: url('../../assets/images/draco/dracobase1.png'); }
 }
 
+/* --- MOTOR DE ANIMACIÓN DEL PORTAL (Caos Orgánico) --- */
+/* Animación 1: Rotación infinita desde el centro */
+@keyframes spinPotion {
+  from { rotate: 0deg; }
+  to   { rotate: 360deg; }
+}
+
+/* Animación 2: Respiración de Zoom (en contra tiempo) */
+@keyframes zoomPotion {
+  from { scale: 1; }
+  to   { scale: 1.4; } /* Se acerca y aleja suavemente */
+}
+
+@keyframes spinGalaxy {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
 /* Motor de luz para el título (Celeste tenue que coincide con el borde de la tabla) */
 @keyframes titleGlow {
@@ -30,9 +47,21 @@
   100% { opacity: 0; }     /* Vuelven a desaparecer por completo */
 }
 
+/* --- MOTOR DEL ANILLO LED DEL BORDE --- */
+/* Propiedad CSS moderna que permite a la tarjeta gráfica animar gradientes rotativos */
+@property --bg-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes spinBorder {
+  to { --bg-angle: 360deg; }
+}
+
 /* El contenedor que agrupa todas las runas */
 .runes-layer {
-  position: absolute;
+  position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 0; /* Al fondo */
   pointer-events: none; /* Que no bloqueen clics */
@@ -51,91 +80,84 @@
   animation-iteration-count: infinite;
 }
 
-.login-layout::after {
+/* --- EL MOTOR DE DISTRIBUCIÓN --- */
+.main-content {
+  position: relative; /* CRÍTICO: Esto atrapa a la imagen de la cueva aquí adentro */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 0;
+  z-index: 1; /* Asegura que la UI esté por encima de las runas */
+}
+
+/* --- EL ESCENARIO DE LA CUEVA (Blindado y anclado al monitor) --- */
+.login-layout::before {
   content: '';
-  position: absolute;
+  position: fixed; /* Se pega a la pantalla, ignora el scroll y el footer */
   top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 1; /* Por encima de las runas */
-  pointer-events: none; /* Permite hacer clic a través de la cueva */
+  z-index: 1; /* Encima de las runas, debajo de la UI */
+  pointer-events: none;
   
-  /* El filtro oscuro y la imagen de tu mockup */
   background-image: 
     linear-gradient(rgba(22, 19, 32, 0.65), rgba(22, 19, 32, 0.65)),
     url('../../assets/images/login/fondo.png');
-  background-size: cover, contain;
-  background-position: center;
+  
+  /* Se escala según tu monitor sin deformarse ni reaccionar al pie de página */
+  background-size: contain; 
+  background-position: center top; /* Lo anclamos arriba para erradicar el corte */
   background-repeat: no-repeat;
 }
 
 .login-layout {
-  /* CAMBIO CLAVE: Permite que el contenedor crezca si el contenido lo requiere */
-  min-height: 100vh; 
-  height: auto; 
+  --draco-size: clamp(140px, 24vh, 320px);   // 16vh → 22vh
+  --draco-lift: 0px;   // 👈 NUEVO — este sí mueve a Draco de verdad, sin afectar a nadie más
+  --title-width: clamp(280px, 28vw, 520px);        // (este ya estaba bien, es horizontal)
+  --form-width: clamp(850px, 44vw, 1300px);
+  --form-height: clamp(520px, 42vh, 620px);        // piso: antes 520px → ahora escala con vh
 
-    /* Solo el color base para fusionar con la cueva */
-  background-color: #13111f;
-  
-  width: 100vw;
-  overflow-x: hidden;
-  overflow-y: auto; /* Activa el scroll vertical solo cuando sea necesario */
-  
+  --group-lift: -80px;
+  --draco-title-gap: -90px;
+  --title-form-gap: -11%;
+  --form-footer-gap: -100px;
+  --block-top-gap: clamp(1vh, 6vh, 10vh);
+
+  min-height: 100svh;
+  height: auto;
+  width: 100%;
+  overflow: visible;
   display: flex;
-  justify-content: center;
-  
-  /* EL SECRETO DE LOS DOS MUNDOS: 
-     Fija la imagen de las runas a la cámara. Cuando el usuario haga scroll 
-     hacia abajo, el formulario se moverá, pero el fondo inmersivo se quedará quieto. */
-  background-attachment: fixed; 
+  flex-direction: column;
+  background-color: #13111f;
+  background-attachment: fixed;
   background-position: center;
   background-size: cover;
-  
-  /* Un colchón arriba y abajo para que al hacer scroll nunca choque con los bordes */
-  padding: 40px 0; 
 }
 
 /* 1. La columna principal (Limpia y responsiva) */
 .content-column {
   position: relative;
-  z-index: 2; 
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: auto;
-  
-  /* Flexbox se encarga de la cercanía. 1rem une a Draco con el Título naturalmente */
-  gap: 1rem; 
-  
-  /* En lugar de romper el margen, trasladamos visualmente el bloque hacia la luz */
-  transform: translateY(1vh);
+  margin: 0 auto;
+  gap: 1rem;
+  margin-top: var(--block-top-gap);
+  margin-bottom: var(--form-footer-gap);
+  transform: translateY(var(--group-lift));
 }
 
 /* --- 2. El Avatar (Refactorizado para CSS puro) --- */
 .draco-avatar {
-  /* Mantenemos tus alturas originales de la versión funcional */
-  height: 250px;
-  
-  /* REEMPLAZO: Como es un div, le damos una proporción de aspecto cuadrada 
-     para simular el comportamiento antiguo de 'width: auto' */
-  aspect-ratio: 4 / 1; 
-  
-  /* REEMPLAZO de object-fit: contain */
+  height: var(--draco-size);
+  aspect-ratio: 4 / 1;
   background-size: contain;
   background-repeat: no-repeat;
-  
-  /* Anclamos la imagen abajo para que al cambiar de fotograma los pies no salten */
-  background-position: bottom center; 
-
-  /* FUSIÓN DE ANIMACIONES:
-     - dracoBreathing usa 'step-end' para hacer cortes secos estilo retro 16-bits (sin difuminado).
-     - float se mantiene exactamente igual que antes. */
-  animation: 
-    dracoBreathing 2.5s infinite step-end,
-    float 15s ease-in-out infinite;
-
-  /* Mantenemos tu posicionamiento responsivo intacto */
-  margin-bottom: -100px;
-  /* Draco nunca superará el 15% del alto de la pantalla */
-  max-height: 25vh;
+  background-position: bottom center;
+  animation: dracoBreathing 2.5s infinite step-end, float 15s ease-in-out infinite;
+  margin-bottom: var(--draco-title-gap);   // 👈 ahora es la ÚNICA declaración — se elimina el -40px viejo
+  transform: translateY(var(--draco-lift));   // 👈 NUEVO
 }
 
 /* 3. El título y su solapamiento seguro */
@@ -145,14 +167,12 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  
-  /* ELIMINADO: height: 300px; (Dejamos que la imagen dicte su altura) */
-  margin-bottom: -21.5%; /* Mantenemos tu excelente cálculo de solapamiento */
+  margin-bottom: var(--title-form-gap);
 }
 
 .game-title {
   width: 100%;
-  max-width: 460px;
+  max-width: var(--title-width);      // antes: 460px fijo
   height: auto;
   object-fit: contain;
 
@@ -161,43 +181,38 @@
   
   /* BUENA PRÁCTICA: Preparamos la GPU para evitar repintados innecesarios */
   will-change: filter;
-  
-  
 }
 
 /* --- 1. CONTENEDOR PRINCIPAL --- */
 .form-container {
+  container-type: size;
+  container-name: login-form;
   font-family: 'Share Tech Mono', monospace;
   position: relative;
-  z-index: 2; 
-  width: 850px; 
-  max-width: 90vw; 
-  
-  /* CAMBIO: Altera la proporción para darle un ~12% más de longitud vertical */
-  aspect-ratio: 16 / 10; 
-  box-sizing: border-box; 
-  
+  z-index: 2;
+
+  width: var(--form-width);
+  max-width: 90vw;
+  height: var(--form-height);
+  box-sizing: border-box;
+  overflow: hidden;   // 👈 NUEVO — red de seguridad: si algo no entra, se recorta prolijo en vez de derramarse
+
   background-image: url('../../assets/images/login/tablasession.png');
-  background-size: 100% 100%; 
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
 
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Distribuye los elementos usando el nuevo espacio */
+  justify-content: center;
   align-items: center;
-  
-  /* AJUSTE MAESTRO:
-     - 16% Arriba: Baja el título 'INICIAR SESIÓN'.
-     - 19% Laterales: Mete los inputs para que no toquen las hojas ni el neón.
-     - 12% Abajo: Da espacio base a los enlaces. */
-  padding: 16% 19% 15% 19%;
-/* Si la pantalla es muy bajita, la tabla se encoge forzosamente 
-     para no superar el 50% de la pantalla. El aspect-ratio encogerá también su ancho. */
-  max-height: 70vh;
-  
-}
 
+  padding: 
+    clamp(24px, 16cqh, 140px)   // top    ← Incremento agresivo para librar el arte superior y empujar el centro abajo
+    clamp(80px, 19cqw, 160px)   // right  ← Incrementado levemente para no morder los bordes laterales de madera
+    clamp(20px, 13cqh, 130px)   // bottom ← Margen inferior contenido para que el flexbox no vuelva a empujar todo hacia arriba
+    clamp(80px, 19cqw, 160px);  // left   
+}
 /* --- 2. TEXTOS Y JERARQUÍA --- */
 .login-form {
   position: relative;
@@ -205,6 +220,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  gap: clamp(10px, 2.2cqh, 24px);   // 👈 espacio entre CADA hijo directo (título, input, input, botones, links)
   justify-content: flex-start; 
   font-family: 'Share Tech Mono', monospace;
   color: #ffffff;
@@ -212,9 +228,8 @@
 
 .form-title {
   text-align: center;
-  font-size: 1.45rem; /* Reducido ligeramente */
+  font-size: clamp(1.1rem, 3.2cqw, 1.8rem); /* Reducido ligeramente */
   letter-spacing: 2px;
-  margin-bottom: 1.5rem; /* Reducimos el margen inferior */
   text-transform: uppercase;
   text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.7); 
 }
@@ -224,12 +239,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem; /* Acerca la etiqueta al campo de texto */
-  margin-bottom: 0.8rem;
   width: 100%;
 }
 
 .input-group label {
-  font-size: 0.85rem; /* Ajuste para mantener jerarquía visual */
+  font-size: clamp(0.75rem, 1.6cqw, 1rem); /* Ajuste para mantener jerarquía visual */
   font-weight: bold;
   letter-spacing: 1px;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.8);
@@ -238,8 +252,9 @@
 .input-group input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.7rem 0.9rem; /* Campos un poco menos altos */
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, 1.8cqw, 1.15rem);
+  padding: clamp(0.4rem, 1.6cqh, 0.9rem) clamp(0.6rem, 1.8cqw, 1.1rem);
+  //              ↑ vertical ahora en CQH   ↑ horizontal se queda en CQW (está bien así)
   font-family: inherit; 
   color: #ffffff;
   
@@ -257,29 +272,302 @@
   border-color: #7fffd4; 
 }
 
+/* --- 4. BOTONES DE ACCIÓN (Retro RPG Style) --- */
+
+/* --- 4. BOTONES DE ACCIÓN (Estilo Portal/Poción) --- */
+/* --- 4. BOTONES DE ACCIÓN (Arquitectura 16-bits) --- */
+.retro-btn {
+  width: 100%;
+  font-family: 'Share Tech Mono', monospace;
+  
+  /* Texto más pequeño según tus requerimientos */
+  font-size: clamp(0.68rem, 1.6cqw, 0.92rem); 
+  padding: clamp(0.5rem, 2cqh, 0.8rem);
+  
+  /* Borde grueso y cuadrado para simular bloques de píxeles */
+  border: 4px solid #3d2b1f; 
+  border-radius: 2px; 
+  
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: bold;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  
+  /* La transición de la sombra sigue siendo mecánica e instantánea */
+  transition: transform 0.1s step-end, box-shadow 0.1s step-end, filter 0.3s ease;
+}
+
+
+/* --- BOTÓN INICIAR AVENTURA (Arquitectura Multi-capa) --- */
+.primary-btn {
+  position: relative;
+  overflow: hidden; 
+  z-index: 1; 
+  
+  /* NUEVO: Matamos el blanco por defecto del navegador con el color de tu cueva */
+  background-color: #13111f;
+
+  /* TEXTO BLINDADO */
+  color: #ffffff; 
+  text-shadow: 2px 2px 0px #000, -1px -1px 0px rgba(0, 0, 0, 0.5); 
+  
+  /* EL MARCO 16-BITS */
+  border: 4px solid #000000;
+  border-radius: 6px; 
+  box-shadow: 0 4px 0 #2a1d15; 
+  
+  transition: transform 0.1s step-end, box-shadow 0.1s step-end;
+}
+
+/* LA CÁMARA DE CONTENCIÓN (Reparación Geométrica) */
+.primary-btn::before {
+  content: '';
+  position: absolute;
+  
+  /* LA CURA: Forzamos un cuadrado gigante (4 veces el tamaño del botón) 
+     y lo centramos matemáticamente de forma absoluta */
+  width: 400%;
+  aspect-ratio: 1 / 1; 
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  
+  z-index: -1; 
+  
+  background-image: 
+    linear-gradient(rgba(19, 17, 31, 0.75), rgba(19, 17, 31, 0.75)),
+    url('../../assets/images/ui/pocion-gemini.png');
+  
+  /* Reducimos el porcentaje del tamaño de la imagen porque ahora el lienzo es 4 veces más grande */
+  background-size: cover, 15% auto; 
+  background-position: center;
+  background-repeat: repeat;
+  
+  image-rendering: pixelated; 
+  
+  animation: 
+    spinPotion 150s linear infinite, 
+    zoomPotion 23s ease-in-out infinite alternate;
+    
+  transition: filter 0.3s ease; 
+}
+
+/* HOVER Y CLICK (Se mantienen igual) */
+.primary-btn:hover::before {
+  filter: brightness(1.6); 
+}
+
+.primary-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #2a1d15;
+}
+
+/* ========================================= */
+/* BOTÓN DE GOOGLE (El Vacío Elemental)      */
+/* ========================================= */
+
+/* --- 1. BASE DEL BOTÓN (Refactorización Pixel-Perfect) --- */
+.google-btn {
+  position: relative;
+  overflow: hidden;
+  background-color: #090810;
+  color: #e2e2e2;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0px #000;
+  
+  /* 1. Destruimos el borde físico para evitar el doble marco */
+  border: none; 
+  border-radius: 6px; 
+  
+  /* 2. Dibujamos el borde negro como una sombra INTERNA (inset), 
+     y mantenemos el relieve 3D EXTERNO */
+  box-shadow: 
+    inset 0 0 0 2px #000000, 
+    0 4px 0 #2a1d15; 
+  
+  z-index: 1;
+  transition: transform 0.1s step-end, box-shadow 0.1s step-end;
+}
+
+/* --- 2. LA GALAXIA INTERIOR (Partículas Elementales) --- */
+.google-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  
+  width: 5px; height: 5px; 
+  background-color: transparent;
+  
+  /* Dispersión Omnidireccional Absoluta */
+  box-shadow: 
+    /* Fuego */
+    -60px -30px 0 0 #EA4335,   150px 80px 0 0 #EA4335,  -250px 10px 0 0 #EA4335,   320px -40px 0 0 #EA4335,
+    -10px 120px 0 0 #EA4335,   200px -110px 0 0 #EA4335, -180px -80px 0 0 #EA4335,   80px 20px 0 0 #EA4335,
+    /* Relámpago */
+     40px -60px 0 0 #FBBC05,  -140px 90px 0 0 #FBBC05,   240px 20px 0 0 #FBBC05,  -310px -30px 0 0 #FBBC05,
+    110px 130px 0 0 #FBBC05,  -220px -100px 0 0 #FBBC05,  170px -70px 0 0 #FBBC05,  -80px 10px 0 0 #FBBC05,
+    /* Naturaleza */
+    -30px 50px 0 0 #34A853,    130px -90px 0 0 #34A853, -260px -20px 0 0 #34A853,   290px 40px 0 0 #34A853,
+    -90px -120px 0 0 #34A853,  230px 100px 0 0 #34A853, -160px 70px 0 0 #34A853,    70px -15px 0 0 #34A853,
+    /* Agua */
+     30px 40px 0 0 #4285F4,   -120px -80px 0 0 #4285F4,  270px -10px 0 0 #4285F4,  -280px 50px 0 0 #4285F4,
+     90px -140px 0 0 #4285F4, -210px 110px 0 0 #4285F4,  190px 60px 0 0 #4285F4,   -50px -20px 0 0 #4285F4;
+    
+  z-index: -1;
+  animation: spinGalaxy 35s linear infinite;
+  
+  opacity: 0.55;
+  transition: opacity 0.4s ease;
+}
+
+/* --- 3. LA TIRA LED FANTASMA (Precisión Geométrica) --- */
+.google-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0; 
+  
+  /* Al no haber borde físico, la curva externa ahora es exactamente 6px */
+  border-radius: 6px; 
+  pointer-events: none; 
+  
+  /* Este padding de 2px coincide milimétricamente con el tamaño del box-shadow inset negro */
+  padding: 2px; 
+  
+  background: conic-gradient(from var(--bg-angle), #EA4335, #FBBC05, #34A853, #4285F4, #EA4335);
+  animation: spinBorder 6s linear infinite;
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  opacity: 0;
+  transition: opacity 2s ease-out; 
+  z-index: 2;
+}
+
+/* --- 4. INTERACCIONES TÁCTILES (:hover y :active) --- */
+
+/* Hover: Enciende el borde LED rápidamente */
+.google-btn:hover::after {
+  opacity: 1;
+  transition: opacity 0.4s ease-in; 
+}
+
+/* Hover: Ilumina la galaxia interior */
+.google-btn:hover::before {
+  opacity: 1;
+}
+
+/* --- INTERACCIÓN TÁCTIL (Actualización del Clic) --- */
+.google-btn:active {
+  transform: translateY(4px);
+  /* Mantenemos el marco negro interno vivo durante el clic, solo matamos la sombra 3D */
+  box-shadow: inset 0 0 0 2px #000000, 0 0 0 #2a1d15;
+}
+
+/* --- 4. ENLACES INFERIORES --- */
 /* --- 4. ENLACES INFERIORES --- */
 .form-actions {
   display: flex;
   justify-content: space-between;
-  width: 100%; /* Obliga a los enlaces a usar los nuevos márgenes laterales */
+  width: 100%;
   margin-top: auto;
 }
 
 .retro-link {
-  color: #7fffd4; 
+  color: #bbf0f0; 
   text-decoration: none;
-  font-size: 0.75rem; /* Letra de soporte más discreta */
+  font-size: 0.75rem; 
   letter-spacing: 1px;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
+  transition: all 0.3s ease;
+  animation: neonPulse 2s infinite alternate ease-in-out;
+  
+  /* EL BLINDAJE: Forzamos a que cada enlace ocupe el 50% de la caja */
+  flex: 1; 
+}
+
+/* El primer enlace se pega a la izquierda */
+.retro-link:first-child {
+  text-align: left;
+}
+
+/* El último enlace se pega a la derecha */
+.retro-link:last-child {
+  text-align: right;
 }
 
 .retro-link:hover {
   color: #ffffff;
-  text-shadow: 0 0 5px #7fffd4;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 1), 0 0 20px rgba(0, 229, 255, 0.8);
 }
 
-/* --- 5. COMPATIBILIDAD MÓVIL (Arquitectura Portrait) --- */
+/* --- EL PIE DE PÁGINA LEGAL --- */
+.legal-footer {
+  text-align: center;
+  padding: 20px 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.70rem;
+  letter-spacing: 1px;
+  
+  /* EL SEPARADOR: Fondo ultra oscuro y un borde superior color madera/tierra */
+  background-color: #05040a; 
+  border-top: 2px solid #3d2b1f; 
+  
+  /* Lo aseguramos por encima del fondo y al final de la página */
+  position: relative;
+  z-index: 10; 
+  margin-top: auto; 
+}
+
+/* ============================================ */
+/* MODO CELULAR — pantallas angostas (mobile)    */
+/* ============================================ */
+
+
 @media (max-width: 768px) {
+
+    .login-layout {
+    --group-lift: 0px;              // sin desplazamiento extra, ya está todo justo
+    --draco-title-gap: -15px;       // overlaps mucho más suaves
+    --title-form-gap: -6%;
+    --form-footer-gap: -20px;
+    --block-top-gap: 1vh;
+    --draco-size: clamp(90px, 12vh, 140px);   // Draco bien chico acá
+    --form-height: clamp(340px, 55vh, 480px);
+  }
+  
+  /* LA PANTALLA RÍGIDA: Obligamos al main a usar el 100% de la altura del celular.
+     Esto empuja físicamente al footer hacia abajo, obligándote a scrollear para verlo. */
+  .main-content {
+    min-height: 100dvh; 
+  }
+  
+  /* APAGAMOS LA IMAGEN DE LA CUEVA EN MÓVILES */
+  .main-content::after {
+    display: none;
+  }
+
+  /* APAGAMOS LA IMAGEN DE LA CUEVA EN MÓVILES — dejamos el filtro oscuro */
+.login-layout::before {
+  background-image: 
+    linear-gradient(rgba(22, 19, 32, 0.849), rgba(22, 19, 32, 0.925));
+  // 👆 mismo gradiente que ya tenías pensado, pero SIN la url() de la imagen
+}
+
+
+
+  .login-form {
+    gap: clamp(6px, 1.5cqh, 12px);
+  }
+
+
   .content-column {
     transform: translateY(-2vh); /* Centramos el bloque en la pantalla */
     gap: 0; /* Eliminamos el espacio automático para controlar todo manualmente */
@@ -315,7 +603,11 @@
     background-size: 100% 100%;
     
     /* Primer valor: Arriba y Abajo (20%) | Segundo valor: Derecha e Izquierda (14.5%) */
-    padding: 20% 12%;
+      padding: 
+      clamp(28px, 20cqh, 70px)
+      clamp(60px, 18cqw, 80px)
+      clamp(25px, 15cqh, 58px)
+      clamp(60px, 18cqw, 80px);
   }
 
   /* Ajustes Tipográficos y de Inputs (se mantienen igual) */
@@ -348,7 +640,7 @@
        este auto margin empujará los enlaces hasta el fondo de la tabla */
     margin-top: auto; 
     gap: 10px;
-  }
+  } 
 
   /* LA MAGIA DEL PSEUDO-ELEMENTO (Solo existirá en móviles) */
   .form-actions::after {
@@ -378,6 +670,62 @@
 .retro-link:last-child {
   text-align: right;
 }
+}
+
+/* ============================================ */
+/* MODO COMPACTO — desktop con poca altura (zoom)*/
+/* ============================================ */
+
+@media (max-height: 700px) and (min-width: 769px) {
+  .login-layout {
+    // === PANEL DE CONTROL — MODO COMPACTO ===
+    --draco-size: 140px;
+    --draco-lift: 60px;
+
+    --title-width: 320px;
+    --title-lift: 10px;
+
+    --form-width: 700px;
+    --form-height: 420px;
+    --form-lift: -35px;
+
+    --draco-title-gap: -20px;
+    --title-form-gap: -8%;
+    --form-footer-gap: -100px;
+    --block-top-gap: 1vh;
+  }
+
+  .draco-avatar {
+    height: var(--draco-size);
+    margin-bottom: var(--draco-title-gap);
+    transform: translateY(var(--draco-lift));
+  }
+
+  .title-container {
+    margin-bottom: var(--title-form-gap);
+    transform: translateY(var(--title-lift));
+  }
+
+  .game-title {
+    max-width: var(--title-width);
+  }
+
+  .form-container {
+    width: var(--form-width);
+    height: var(--form-height);
+    background-size: contain;   // 👈 clave: nunca se deforma, pase lo que pase
+    transform: translateY(var(--form-lift));
+
+    padding: 110px 160px 100px 160px;   // top | right | bottom | left — cuatro números simples
+  }
+
+  .login-form {
+    gap: clamp(6px, 1.5cqh, 12px);
+  }
+
+  .content-column {
+    margin-top: var(--block-top-gap);
+  }
 }
 
 /* Animación del brillo sutil celeste */
