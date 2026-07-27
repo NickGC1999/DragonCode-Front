@@ -59,6 +59,14 @@
   to { --bg-angle: 360deg; }
 }
 
+/* Participa en la columna flex del AppComponent */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;       /* Ocupa todo el espacio disponible entre el top y el footer global */
+  min-height: 0; /* Permite que el flex shrink funcione correctamente */
+}
+
 /* El contenedor que agrupa todas las runas */
 .runes-layer {
   position: fixed;
@@ -122,7 +130,8 @@
   --form-footer-gap: -100px;
   --block-top-gap: clamp(1vh, 6vh, 10vh);
 
-  min-height: 100svh;
+  flex: 1;       /* Hereda el espacio del :host, que ya hereda del shell global */
+  min-height: 0; /* Evita que el flex desborde hacia abajo */
   height: auto;
   width: 100%;
   overflow: visible;
@@ -155,7 +164,7 @@
   background-size: contain;
   background-repeat: no-repeat;
   background-position: bottom center;
-  animation: dracoBreathing 2.5s infinite step-end, float 15s ease-in-out infinite;
+  animation: dracoBreathing 2s infinite step-end, float 15s ease-in-out infinite;
   margin-bottom: var(--draco-title-gap);   // 👈 ahora es la ÚNICA declaración — se elimina el -40px viejo
   transform: translateY(var(--draco-lift));   // 👈 NUEVO
 }
@@ -272,9 +281,7 @@
   border-color: #7fffd4; 
 }
 
-/* --- 4. BOTONES DE ACCIÓN (Retro RPG Style) --- */
 
-/* --- 4. BOTONES DE ACCIÓN (Estilo Portal/Poción) --- */
 /* --- 4. BOTONES DE ACCIÓN (Arquitectura 16-bits) --- */
 .retro-btn {
   width: 100%;
@@ -352,7 +359,7 @@
   
   animation: 
     spinPotion 150s linear infinite, 
-    zoomPotion 23s ease-in-out infinite alternate;
+    zoomPotion 13s ease-in-out infinite alternate;
     
   transition: filter 0.3s ease; 
 }
@@ -507,24 +514,9 @@
   text-shadow: 0 0 10px rgba(0, 229, 255, 1), 0 0 20px rgba(0, 229, 255, 0.8);
 }
 
-/* --- EL PIE DE PÁGINA LEGAL --- */
-.legal-footer {
-  text-align: center;
-  padding: 20px 10px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.70rem;
-  letter-spacing: 1px;
-  
-  /* EL SEPARADOR: Fondo ultra oscuro y un borde superior color madera/tierra */
-  background-color: #05040a; 
-  border-top: 2px solid #3d2b1f; 
-  
-  /* Lo aseguramos por encima del fondo y al final de la página */
-  position: relative;
-  z-index: 10; 
-  margin-top: auto; 
-}
+/* --- EL PIE DE PÁGINA LEGAL ---
+   Movido a app.component.scss (global).
+   Ya no vive aquí para evitar duplicados. */
 
 /* ============================================ */
 /* MODO CELULAR — pantallas angostas (mobile)    */

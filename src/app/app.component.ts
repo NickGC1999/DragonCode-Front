@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { LoginComponent } from './login/login.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [LoginComponent], // Importamos tu componente encapsulado
-  template: '<app-login></app-login>', // Renderizamos directamente tu login aquí
+  imports: [RouterOutlet],
+  templateUrl: './app.component.html', // Shell con router-outlet + footer global
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  // Archivo limpio. Delegamos toda la responsabilidad gráfica al hijo.
-}
+  // Archivo limpio. El router decide qué pantalla renderizar.
+}

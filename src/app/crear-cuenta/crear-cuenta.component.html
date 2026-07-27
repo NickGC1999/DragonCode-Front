@@ -1,0 +1,101 @@
+<main class="forge-layout">
+
+    <!-- --- SISTEMA DE PARTÍCULAS (CENIZAS) --- -->
+  <div class="ashes-container">
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    <div class="ash"></div><div class="ash"></div><div class="ash"></div>
+    
+  </div>
+  
+  <!-- Nuestro anfitrión (Z-Index Alto) -->
+  <img src="../../assets/images/draco/dracoanimaciones/dracoherrero/dracoherrero1.png" alt="Draco Herrero" class="draco-sprite">
+
+  <!-- Contenedor Principal de la Tabla -->
+  <section class="forge-table-wrapper">
+    
+    <!-- El Caldero Superior (Sobresale hacia arriba) -->
+    <header class="table-cauldron">
+      <h1 class="cauldron-text">Forjar nuevo usuario</h1>
+    </header>
+
+    <!-- CAPA 1: Borde Negro Exterior -->
+    <div class="border-outer-black">
+      
+      <!-- CAPA 2: Río de Lava Animado -->
+      <div class="border-middle-lava">
+        
+        <!-- CAPA 3: Borde Negro Interior -->
+        <div class="border-inner-black">
+          
+          <!-- CAPA 4: El Lienzo de Ladrillos -->
+          <form class="brick-content">
+            
+            <!-- Reemplaza el contenido vacío de tu form con esto -->
+<div class="form-grid">
+  
+  <!-- Fila 1: Nombre y Apellido -->
+  <div class="input-group">
+    <label>Nombre</label>
+    <input type="text" placeholder="Tu nombre..." required>
+  </div>
+  <div class="input-group">
+    <label>Apellido</label>
+    <input type="text" placeholder="Tu apellido..." required>
+  </div>
+
+  <!-- Fila 2: Correo (Ocupa todo el ancho) -->
+  <div class="input-group full-width">
+    <label>Correo Electrónico</label>
+    <input type="email" placeholder="draco@dragoncode.com" required>
+  </div>
+
+  <!-- Fila 3: Contraseñas -->
+  <div class="input-group">
+    <label>Contraseña</label>
+    <input type="password" placeholder="••••••••" required pattern="(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+">
+    <!-- Mensaje de error pre-estilizado (Pronto lo controlaremos con TypeScript) -->
+    <span class="error-text">* Falta 1 Mayúscula, 1 Número y 1 Signo</span>
+  </div>
+  <div class="input-group">
+    <label>Confirmar Contraseña</label>
+    <input type="password" placeholder="••••••••" required>
+  </div>
+
+  <!-- Fila 4: Términos y Condiciones -->
+  <div class="checkbox-group full-width">
+    <label class="custom-checkbox">
+      <input type="checkbox" required>
+      Acepto los términos y condiciones.
+    </label>
+  </div>
+
+  <!-- Fila 5: El Botón de Acción -->
+  <div class="action-group full-width">
+    <button type="submit" class="forge-btn">FORJAR CUENTA</button>
+  </div>
+
+</div>
+            
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>

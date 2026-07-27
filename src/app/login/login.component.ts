@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router'; // 1. Importas el enrutador
 
 interface Rune {
   symbol: string;
@@ -13,6 +14,7 @@ interface Rune {
 @Component({
   selector: 'app-login',
   standalone: true,
+  imports: [RouterLink], // 2. Se lo inyectas al componente
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
