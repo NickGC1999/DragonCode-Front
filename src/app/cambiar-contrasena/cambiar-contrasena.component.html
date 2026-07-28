@@ -1,0 +1,41 @@
+<app-cyber-layout>
+
+  <form class="cyber-form">
+
+    <!-- Encabezado -->
+    <h2 class="cyber-title">CAMBIO DE CONTRASEÑA</h2>
+    <p class="cyber-text">
+      Ingresa y confirma tu nueva contraseña.
+    </p>
+
+    <!-- Nueva Contraseña -->
+    <div class="cyber-input-group">
+      <label for="new-password">Nueva Contraseña</label>
+      <input
+        type="password"
+        id="new-password"
+        placeholder="••••••••"
+        required
+        pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).+"
+      >
+      <!-- Aparece SOLO cuando el usuario escribe algo incorrecto -->
+      <span class="error-text">* Falta 1 Mayúscula, 1 Minúscula, 1 Número y 1 Símbolo</span>
+    </div>
+
+    <!-- Confirmar Contraseña -->
+    <div class="cyber-input-group">
+      <label for="confirm-password">Confirmar Contraseña</label>
+      <input
+        type="password"
+        id="confirm-password"
+        placeholder="••••••••"
+        required
+      >
+    </div>
+
+    <!-- Acción Principal -->
+    <button type="submit" class="cyber-btn">CONFIRMAR CAMBIO</button>
+
+  </form>
+
+</app-cyber-layout>

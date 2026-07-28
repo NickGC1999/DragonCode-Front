@@ -13,5 +13,13 @@ export const routes: Routes = [
     path: 'crear-cuenta',
     // MAGIA DE RENDIMIENTO: El navegador solo descarga este componente si el usuario entra a la ruta
     loadComponent: () => import('./crear-cuenta/crear-cuenta.component').then(m => m.CrearCuentaComponent)
+  },
+  {
+    path: 'recuperar-cuenta',
+    loadComponent: () => import('./recuperar-cuenta/recuperar-cuenta.component').then(m => m.RecuperarCuentaComponent)
+  },
+  {
+    path: 'cambiar-contrasena',
+    loadComponent: () => import('./cambiar-contrasena/cambiar-contrasena.component').then(m => m.CambiarContrasenaComponent)
   }
 ];
