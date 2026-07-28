@@ -364,10 +364,13 @@ $ash-colors: #BC4B42, #E43C19, #EC4121, #8B2216;
   cursor: pointer;
 }
 
-/* --- BOTÓN DE ENVIAR (ACCIÓN PRINCIPAL) --- */
+/* --- FILA DE ACCIONES (2 botones lado a lado) --- */
 .action-group {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 16px;        /* Espacio entre Volver y Forjar Cuenta */
+  flex-wrap: wrap;  /* En pantallas muy estrechas se apilan */
   margin-top: 15px;
 }
 
@@ -422,6 +425,18 @@ $ash-colors: #BC4B42, #E43C19, #EC4121, #8B2216;
     0 calc(var(--pixel) * 3) 0 0 rgba(0, 0, 0, 0.6);
     
   transition: transform 0.1s ease-out;
+
+  /* Necesario cuando se usa como <a> en lugar de <button> */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* Variante: Botón Volver (mismo motor pixel art, color gris neutro) */
+.forge-btn--back {
+  --btn-color: #943611;  /* Gris púzura oscura — neutro, no compite con el naranja */
+  --btn-shadow: #2a2a38; /* Sombra más profunda */
 }
 
 /* Física al presionar el botón */
@@ -530,7 +545,8 @@ $ash-colors: #BC4B42, #E43C19, #EC4121, #8B2216;
   .forge-btn {
     padding: 12px 20px;
     font-size: 1.1rem;
-    width: 100%; /* Obliga al botón a ser ancho y fácil de tocar */
+    flex: 1;        /* Cada botón ocupa la mitad del ancho disponible */
+    min-width: 120px;
   }
   
   .custom-checkbox {
