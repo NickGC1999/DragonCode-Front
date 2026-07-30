@@ -6,12 +6,10 @@ export const routes: Routes = [
   
   {
     path: 'login',
-    // Asumiendo que tu login también usa Lazy Loading, o puedes dejarlo normal
     loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
   },
   {
     path: 'crear-cuenta',
-    // MAGIA DE RENDIMIENTO: El navegador solo descarga este componente si el usuario entra a la ruta
     loadComponent: () => import('./crear-cuenta/crear-cuenta.component').then(m => m.CrearCuentaComponent)
   },
   {
@@ -21,5 +19,9 @@ export const routes: Routes = [
   {
     path: 'cambiar-contrasena',
     loadComponent: () => import('./cambiar-contrasena/cambiar-contrasena.component').then(m => m.CambiarContrasenaComponent)
+  },
+  {
+    path: 'pantalla-principal',
+    loadComponent: () => import('./pantalla-principal/pantalla-principal.component').then(m => m.PantallaPrincipalComponent)
   }
-];
+];

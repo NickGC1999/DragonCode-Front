@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit {
     const colors = ['#D8BFD8', '#ADD8E6', '#FFB6C1', '#FFFFFF'];
     
     // Subimos un poco la cantidad general
-    const numRunes = 65; 
+    const numRunes = 45; 
 
     for (let i = 0; i < numRunes; i++) {
       let randomTop = Math.random() * 100;
