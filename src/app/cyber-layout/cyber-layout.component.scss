@@ -64,6 +64,12 @@
   z-index: 10;
 }
 
+/* Animación de entrada suave para evitar pestañeos */
+@keyframes suaveAparicion {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .draco-hacker {
   width: var(--draco-tamano);
   height: auto;
@@ -72,8 +78,8 @@
   /* Mantiene los píxeles cortantes y nítidos */
   image-rendering: pixelated; 
   
-  /* Motor de animación con salto discreto (step-end) */
-  animation: hackerTyping var(--draco-velocidad-tipeo) step-end infinite;
+  /* Motor de animación con salto discreto (step-end) y fade-in */
+  animation: hackerTyping var(--draco-velocidad-tipeo) step-end infinite, suaveAparicion 0.4s ease-out forwards;
 }
 
 /* =========================================

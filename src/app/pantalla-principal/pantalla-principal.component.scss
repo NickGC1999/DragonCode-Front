@@ -289,7 +289,12 @@
 }
 
 /* Todos los hijos del HUD sobre el overlay */
-.hud-left, .hud-center, .hud-right {
+.hud-left, .hud-right {
+  position: relative;
+  z-index: 10; /* Mayor prioridad para que los menús desplegables no queden detrás del logo */
+}
+
+.hud-center {
   position: relative;
   z-index: 1;
 }
@@ -1470,10 +1475,6 @@
     --title-overflow:        16px;
     --section-title-size:    0.9rem;
     --greeting-panel-py:     10px;
-  }
-
-  .avatar-card {
-    height: 130px;
   }
 }
 

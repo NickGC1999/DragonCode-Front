@@ -11,6 +11,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <!-- PRECARGA DE ASSETS PESADOS (Para evitar FOUC y pestañeos en animaciones) -->
+  <link rel="preload" href="assets/images/draco/dracoanimaciones/dracoherrero/dracoherrero1.png" as="image">
+  <link rel="preload" href="assets/images/draco/dracoanimaciones/dracohaker/dracohaker1.png" as="image">
+  
+  <!-- Precarga de los 3 frames de la animación de respiración del Login -->
+  <link rel="preload" href="assets/images/draco/dracobase1.png" as="image">
+  <link rel="preload" href="assets/images/draco/dracobase2.png" as="image">
+  <link rel="preload" href="assets/images/draco/dracobase3.png" as="image">
 </head>
 <body>
   <app-root></app-root>

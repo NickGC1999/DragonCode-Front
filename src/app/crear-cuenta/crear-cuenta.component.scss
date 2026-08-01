@@ -43,6 +43,12 @@
   padding-bottom: 2rem;
 }
 
+/* Animación de entrada suave para evitar pestañeos */
+@keyframes suaveAparicion {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* --- DRACO HERRERO --- */
 .draco-sprite {
   width: var(--draco-tamano); 
@@ -54,7 +60,7 @@
   position: relative;
   z-index: 10; 
   /* LA MAGIA: Conecta los frames con salto discreto (step-end) */
-  animation: dracoForgeLoop var(--draco-velocidad) step-end infinite;
+  animation: dracoForgeLoop var(--draco-velocidad) step-end infinite, suaveAparicion 0.4s ease-out forwards;
 }
 
 /* --- CONTENEDOR DE LA TABLA --- */
