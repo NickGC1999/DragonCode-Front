@@ -97,7 +97,7 @@
 
       <!-- PANEL 1 IZQUIERDO — Perfil: avatar
            Preparado para click (futuro: navegar a /perfil) -->
-      <button type="button" class="profile-panel" title="Ver perfil">
+      <button type="button" class="profile-panel" (click)="openProfile()" title="Ver perfil">
         <p class="profile-label">PERFIL</p>
         <img [src]="selectedAvatar" alt="Tu avatar" class="player-avatar">
       </button>
@@ -107,8 +107,8 @@
            La imagen se pasa al SCSS via inline style para el ::before -->
       <div class="greeting-panel" [style.--greeting-bg]="'url(' + greetingBg + ')'">
         <div class="greeting-panel-content">
-          <p class="player-name">Draco</p>
-          <p class="greeting-text">{{ greetingMessage }}</p>
+          <p class="player-name">{{ (userProfile$ | async)?.nombre }}</p>
+          <p class="greeting-text">{{ greetingMessage$ | async }}</p>
         </div>
       </div>
 
@@ -180,61 +180,14 @@
 
 
   <!-- ═══════════════════════════════════════════════════════
-       MODAL: TIENDA DE AVATARES
+       MODAL: TIENDA DE AVATARES (NUEVO COMPONENTE)
   ═══════════════════════════════════════════════════════ -->
   @if (isShopOpen) {
-    <div class="shop-overlay" (click)="closeShop()">
-      <div class="shop-modal" (click)="$event.stopPropagation()">
-
-        <header class="shop-header">
-          <h2 class="shop-title">TIENDA DE AVATARES</h2>
-          <div class="shop-header-actions">
-            <div class="shop-stars-counter">
-              <span class="star-icon">⭐</span>
-              <span class="star-count">0 / 30</span>
-            </div>
-            <button type="button" class="shop-close-btn" (click)="closeShop()">X</button>
-          </div>
-        </header>
-
-        <p class="shop-subtitle">Selecciona tu companero de aventura</p>
-
-        <div class="avatars-grid">
-          @for (avatar of avatars; track avatar.id) {
-            <button
-              type="button"
-              class="avatar-card"
-              [class.is-selected]="selectedAvatar === avatar.path"
-              (click)="selectAvatar(avatar)">
-              <img [src]="avatar.path" [alt]="avatar.name" class="avatar-card-img">
-              <div class="avatar-card-info">
-                <span class="avatar-card-name">{{ avatar.name }}</span>
-                <span class="avatar-card-price">{{ avatar.price }} ⭐</span>
-                <p class="avatar-card-desc">{{ avatar.description }}</p>
-              </div>
-              @if (selectedAvatar === avatar.path) {
-                <span class="avatar-active-badge">ACTIVO</span>
-              }
-            </button>
-          }
-        </div>
-
-      </div>
-    </div>
-    
-    <!-- MODAL CONFIRMACIÓN DE COMPRA -->
-    @if (isConfirmModalOpen && avatarToBuy) {
-      <div class="shop-confirm-overlay" (click)="cancelPurchase()">
-        <div class="shop-confirm-modal" (click)="$event.stopPropagation()">
-          <h3 class="confirm-title">¿Desbloquear Avatar?</h3>
-          <p class="confirm-text">¿Deseas gastar <span class="confirm-price">5 ⭐</span> en <strong>{{ avatarToBuy.name }}</strong>?</p>
-          <div class="confirm-actions">
-            <button class="btn-cancel" (click)="cancelPurchase()">Atrás</button>
-            <button class="btn-confirm" (click)="confirmPurchase()">Confirmar</button>
-          </div>
-        </div>
-      </div>
-    }
+    <app-tienda
+      [avatarActual]="selectedAvatar"
+      (closeModal)="closeShop()"
+      (avatarChanged)="onAvatarChanged($event)">
+    </app-tienda>
   }
 
   <!-- ═══════════════════════════════════════════════════════
@@ -253,6 +206,16 @@
         </div>
       </div>
     </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODAL: PERFIL (NUEVO)
+  ═══════════════════════════════════════════════════════ -->
+  @if (isProfileOpen) {
+    <app-perfil 
+      (closeModal)="closeProfile()" 
+      [avatarActual]="selectedAvatar">
+    </app-perfil>
   }
 
   <!-- ═══════════════════════════════════════════════════════

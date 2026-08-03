@@ -121,6 +121,13 @@
   box-shadow: 0 0 0 #000;
 }
 
+.cyber-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(80%);
+  pointer-events: none;
+}
+
 /* ============================================ */
 /* MODO CELULAR                                 */
 /* ============================================ */
