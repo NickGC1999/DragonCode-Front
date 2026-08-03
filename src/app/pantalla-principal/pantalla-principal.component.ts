@@ -1,5 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { PerfilComponent } from '../perfil/perfil.component';
+import { TiendaComponent } from '../tienda/tienda.component';
+import { NotificationService } from '../services/notification.service';
+import { UserService, UserProfile } from '../services/user.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 // ─── MODELOS DE DATOS ───────────────────────────────────────────
 interface Rune {
@@ -12,24 +20,22 @@ interface Rune {
   fontSize: string;
 }
 
-interface Avatar {
-  id:   string;
-  name: string;
-  path: string;
-  price: number;
-  description: string;
-}
 
 @Component({
   selector: 'app-pantalla-principal',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CommonModule, FormsModule, PerfilComponent, TiendaComponent],
   templateUrl: './pantalla-principal.component.html',
   styleUrl:    './pantalla-principal.component.scss'
 })
 export class PantallaPrincipalComponent implements OnInit {
 
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
+  private userService = inject(UserService);
+
+  // ── ESTADO: Perfil Usuario (State Management) ───────────────────
+  userProfile$!: Observable<UserProfile>;
 
   // ── ESTADO: Notificaciones ──────────────────────────────────────
   isNotifOpen = false;
@@ -42,13 +48,17 @@ export class PantallaPrincipalComponent implements OnInit {
   runes: Rune[] = [];
 
   // ── ESTADO: Saludo dinámico ─────────────────────────────────────
-  greetingMessage = '';
+  greetingTemplate = '';
+  greetingMessage$!: Observable<string>;
 
   // ── ESTADO: Avatar seleccionado (default: Drako Base) ───────────
   selectedAvatar = 'assets/images/tienda/avatares/drakobase.png';
 
   // ── ESTADO: Modal tienda ─────────────────────────────────────────
   isShopOpen = false;
+
+  // ── ESTADO: Modal perfil ─────────────────────────────────────────
+  isProfileOpen = false;
 
   // ── ESTADO: Modal estrellas ──────────────────────────────────────
   isStarsModalOpen = false;
@@ -60,24 +70,17 @@ export class PantallaPrincipalComponent implements OnInit {
     stars: Math.floor(Math.random() * 4) // 0, 1, 2, o 3 estrellas aleatorias para probar
   }));
 
-  // ── CATÁLOGO DE AVATARES ─────────────────────────────────────────
-  avatars: Avatar[] = [
-    { id: 'drakobase',     name: 'Drako Base',     path: 'assets/images/tienda/avatares/drakobase.png', price: 5, description: 'El clásico y confiable compañero de código.' },
-    { id: 'drakoaprendiz', name: 'Drako Aprendiz', path: 'assets/images/tienda/avatares/drakoaprendiz.png', price: 5, description: 'Listo para absorber nuevos conocimientos.' },
-    { id: 'drakocapa',     name: 'Drako Capa',     path: 'assets/images/tienda/avatares/drakocapa.png', price: 5, description: 'Elegancia mágica para tus sesiones.' },
-    { id: 'drakochancla',  name: 'Drako Chancla',  path: 'assets/images/tienda/avatares/drakochancla.png', price: 5, description: 'Infalible para corregir bugs malcriados.' },
-    { id: 'drakohaaland',  name: 'Drako Haaland',  path: 'assets/images/tienda/avatares/drakohaaland.png', price: 5, description: 'Una máquina de hacer goles en programación.' },
-    { id: 'drakombappe',   name: 'Drako Mbappé',   path: 'assets/images/tienda/avatares/drakombappe.png', price: 5, description: 'Rapidez explosiva al compilar.' },
-  ];
-
-  // ── ESTADO: Confirmación de compra ───────────────────────────────
-  isConfirmModalOpen = false;
-  avatarToBuy: Avatar | null = null;
 
   // ── CICLO DE VIDA ────────────────────────────────────────────────
   ngOnInit(): void {
+    this.userProfile$ = this.userService.getProfile();
     this.generateRunes();
     this.setGreeting();
+
+    // Mapea el perfil del usuario para inyectar su nombre real en el template del saludo
+    this.greetingMessage$ = this.userProfile$.pipe(
+      map(profile => this.greetingTemplate.replace('{nombre}', profile.nombre))
+    );
   }
 
   // ── LÓGICA: Generador de runas (idéntico al login) ───────────────
@@ -118,27 +121,27 @@ export class PantallaPrincipalComponent implements OnInit {
     const hour = new Date().getHours();
 
     const morning = [
-      '¡Buenos días, Draco! ¿Listo para forjar código hoy?',
-      '¡Despierta, Draco! El reino del código te espera.',
-      '¡Los dragones madrugadores conquistan más reinos, Draco!',
-      '¡Mañana de aventuras, Draco! ¿Qué misión atacamos hoy?',
-      '¡Buenos días, valiente! El conocimiento aguarda tu llegada.',
+      '¡Buenos días, {nombre}! ¿Listo para forjar código hoy?',
+      '¡Despierta, {nombre}! El reino del código te espera.',
+      '¡Los dragones madrugadores conquistan más reinos, {nombre}!',
+      '¡Mañana de aventuras, {nombre}! ¿Qué misión atacamos hoy?',
+      '¡Buenos días, valiente {nombre}! El conocimiento aguarda tu llegada.',
     ];
 
     const afternoon = [
-      '¡Buenas tardes, Draco! Sigue conquistando el código.',
-      '¡Tarde productiva, Draco! Los dragones no descansan.',
-      '¡Hola de nuevo, Draco! La tarde es perfecta para aprender.',
-      '¡Sigue así, Draco! El código no se forja solo.',
-      'Tarde a tarde, un paso más al dominio total, Draco.',
+      '¡Buenas tardes, {nombre}! Sigue conquistando el código.',
+      '¡Tarde productiva, {nombre}! Los dragones no descansan.',
+      '¡Hola de nuevo, {nombre}! La tarde es perfecta para aprender.',
+      '¡Sigue así, {nombre}! El código no se forja solo.',
+      'Tarde a tarde, un paso más al dominio total, {nombre}.',
     ];
 
     const night = [
-      '¡Buenas noches, Draco! Los mejores programadores trabajan de noche.',
-      '¡Sesión nocturna, Draco! La oscuridad hace brillar el código.',
-      'Los dragones nocturnos son los más legendarios, Draco.',
-      '¡Un último reto antes de descansar, Draco!',
-      'Las mejores ideas nacen bajo las estrellas, Draco.',
+      '¡Buenas noches, {nombre}! Los mejores programadores trabajan de noche.',
+      '¡Sesión nocturna, {nombre}! La oscuridad hace brillar el código.',
+      'Los dragones nocturnos son los más legendarios, {nombre}.',
+      '¡Un último reto antes de descansar, {nombre}!',
+      'Las mejores ideas nacen bajo las estrellas, {nombre}.',
     ];
 
     let pool: string[];
@@ -153,7 +156,7 @@ export class PantallaPrincipalComponent implements OnInit {
       this.greetingBg = 'assets/images/pantallaprincipal/fondonoche.png';
     }
 
-    this.greetingMessage = pool[Math.floor(Math.random() * pool.length)];
+    this.greetingTemplate = pool[Math.floor(Math.random() * pool.length)];
   }
 
 
@@ -162,33 +165,21 @@ export class PantallaPrincipalComponent implements OnInit {
     this.isShopOpen = true;
   }
 
+  // ── MODAL: Perfil ───────────────────────────────────────────────
+  openProfile(): void {
+    this.isProfileOpen = true;
+  }
+
+  closeProfile(): void {
+    this.isProfileOpen = false;
+  }
+
   closeShop(): void {
     this.isShopOpen = false;
-    this.isConfirmModalOpen = false;
-    this.avatarToBuy = null;
   }
 
-  // Al hacer clic en un avatar en la tienda
-  selectAvatar(avatar: Avatar): void {
-    // Si ya lo tiene equipado, no hace nada (o podríamos poner otra lógica futura)
-    if (this.selectedAvatar === avatar.path) return;
-    
-    this.avatarToBuy = avatar;
-    this.isConfirmModalOpen = true;
-  }
-  
-  confirmPurchase(): void {
-    if (this.avatarToBuy) {
-      this.selectedAvatar = this.avatarToBuy.path;
-      // Aquí en el futuro se restarían las estrellas
-    }
-    this.isConfirmModalOpen = false;
-    this.avatarToBuy = null;
-  }
-
-  cancelPurchase(): void {
-    this.isConfirmModalOpen = false;
-    this.avatarToBuy = null;
+  onAvatarChanged(newAvatarPath: string): void {
+    this.selectedAvatar = newAvatarPath;
   }
 
   openStarsModal(): void {
