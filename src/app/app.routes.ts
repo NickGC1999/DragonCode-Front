@@ -23,5 +23,13 @@ export const routes: Routes = [
   {
     path: 'pantalla-principal',
     loadComponent: () => import('./pantalla-principal/pantalla-principal.component').then(m => m.PantallaPrincipalComponent)
+  },
+  {
+    path: 'aventura',
+    loadComponent: () => import('./mapa-aventura/mapa-aventura.component').then(m => m.MapaAventuraComponent)
+  },
+  {
+    path: 'aventura/nivel/:id',
+    loadComponent: () => import('./nivel-ogro/nivel-ogro.component').then(m => m.NivelOgroComponent)
   }
 ];
