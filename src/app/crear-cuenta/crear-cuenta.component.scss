@@ -30,7 +30,7 @@
 
 /* --- FONDO BASE --- */
 .forge-layout {
-  position: relative; /* <--- AÑADE ESTA LÍNEA AQUÍ */
+  position: relative; 
   width: 100%;
   flex: 1;       /* Ocupa el espacio del :host sin forzar un min-height absoluto */
   min-height: 0;

@@ -1,0 +1,47 @@
+<div class="inventory-container">
+  <div class="inventory-main-header">
+    <span class="inventory-title">INVENTARIO</span>
+  </div>
+
+  <div class="inventory-body">
+    <!-- TAB HEADER MÓVIL (oculto en PC) -->
+    <div class="mobile-tabs-header">
+      <button class="tab-btn" [class.active]="tabActiva === 'acciones'" (click)="setTab('acciones')">ACCIONES</button>
+      <button class="tab-btn" [class.active]="tabActiva === 'objetos'" (click)="setTab('objetos')">OBJETOS</button>
+    </div>
+
+    <!-- Sector Izquierdo: Acciones -->
+    <div class="inventory-section actions-section" [class.cajon-cerrado]="!mostrarObjetos" [class.mobile-hidden]="tabActiva !== 'acciones'">
+      <h3 class="section-subtitle desktop-only">ACCIONES</h3>
+      
+      <div class="cards-scroll-area">
+        <div class="cards-grid">
+          @for (tarjeta of configuracion; track tarjeta.accion; let i = $index) {
+            <div class="action-card" 
+                 [style.backgroundColor]="tarjeta.color" 
+                 [style.animation-delay]="animandoOla ? (i * 0.1) + 's' : '0s'"
+                 [class.salto-ola]="animandoOla"
+                 (click)="seleccionarTarjeta(tarjeta)">
+              <span class="card-title">{{ tarjeta.texto }}</span>
+              <span class="card-code">{{ tarjeta.accion }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón divisor: vive en la línea entre ambos paneles -->
+    <button class="toggle-drawer-btn" (click)="toggleObjetos()">
+      {{ mostrarObjetos ? '▶' : '◀' }}
+    </button>
+
+    <!-- Sector Derecho: Objetos -->
+    <div class="inventory-section objects-section" [class.hidden]="!mostrarObjetos" [class.mobile-hidden]="tabActiva !== 'objetos'">
+      <h3 class="section-subtitle desktop-only">OBJETOS</h3>
+      <div class="objects-container">
+        <!-- Placeholder para futuras pociones o ítems -->
+        <p class="empty-msg">Vacío...</p>
+      </div>
+    </div>
+  </div>
+</div>
