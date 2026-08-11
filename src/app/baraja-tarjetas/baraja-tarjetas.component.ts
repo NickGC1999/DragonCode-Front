@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface TarjetaConfig {
-  texto: string;
-  color: string;
+  nombre: string;
+  colorBoton: string;
+  colorConsola: string;
   accion: string;
 }
 
@@ -20,44 +21,85 @@ export class BarajaTarjetasComponent {
   // Ahora emitimos el objeto completo para que el Layout sepa el color
   @Output() instruccionSeleccionada = new EventEmitter<TarjetaConfig>();
 
+  @Input() modoJuego: 'aventura' | 'aula' = 'aventura';
+  @Input() estadoObjetos = {
+    libro: { activo: true }, // El libro no se consume
+    clarividencia: { activo: true, consumida: false },
+    vida: { activo: true, consumida: false },
+    tiempo: { activo: true, consumida: false }
+  };
+
+  pestanaActiva: 'acciones' | 'objetos' = 'acciones';
+  cambiarPestana(tab: 'acciones' | 'objetos') {
+    if (this.pestanaActiva === tab || this.bloquearBoton) return;
+    this.pestanaActiva = tab;
+    
+    // Dispara la animación de ola al cambiar de pestaña
+    this.animandoOla = true;
+    this.bloquearBoton = true;
+    setTimeout(() => {
+      this.animandoOla = false;
+      this.bloquearBoton = false;
+    }, 1000);
+  }
+
   mostrarObjetos: boolean = true;
   animandoOla: boolean = false;
   bloquearBoton: boolean = false;
-  tabActiva: 'acciones' | 'objetos' = 'acciones';
 
-  setTab(tab: 'acciones' | 'objetos') {
-    this.tabActiva = tab;
-  }
+  @Output() onUsarItem = new EventEmitter<'roja' | 'verde' | 'amarilla'>();
+
+  rojaTemblando: boolean = false;
+  verdeTemblando: boolean = false;
+  amarillaTemblando: boolean = false;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   seleccionarTarjeta(tarjeta: TarjetaConfig) {
     this.instruccionSeleccionada.emit(tarjeta);
   }
 
+  agitarPocion(tipo: 'roja' | 'verde' | 'amarilla') {
+    if (tipo === 'roja') {
+      this.rojaTemblando = true;
+      this.cdr.detectChanges(); // FIX CRÍTICO: Forzar a Angular a pintar el temblor
+      setTimeout(() => {
+        this.rojaTemblando = false;
+        this.cdr.detectChanges();
+      }, 400);
+    } else if (tipo === 'verde') {
+      this.verdeTemblando = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.verdeTemblando = false;
+        this.cdr.detectChanges();
+      }, 400);
+    } else if (tipo === 'amarilla') {
+      this.amarillaTemblando = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.amarillaTemblando = false;
+        this.cdr.detectChanges();
+      }, 400);
+    }
+  }
+
   toggleObjetos() {
-    // Medida de seguridad: Si está animando, bloquea el spam de clicks
     if (this.bloquearBoton) return;
     this.bloquearBoton = true;
 
     if (this.mostrarObjetos) {
-      // 1. Inicia el cierre del cajón (el CSS toma 0.3s)
       this.mostrarObjetos = false;
-
-      // 2. Tan pronto como el cajón termina de cerrar (300ms), inicia la ola
       setTimeout(() => {
         this.animandoOla = true;
       }, 300);
-
-      // 3. Limpieza final y desbloqueo del botón
       setTimeout(() => {
         this.animandoOla = false;
         this.bloquearBoton = false;
-      }, 1300); // 300ms (cierre) + 1000ms (animación de ola)
-
+      }, 1300);
     } else {
-      // Flujo de apertura: cajón se abre y tarjetas se reacomodan en ola
       this.mostrarObjetos = true;
       this.animandoOla = true;
-      
       setTimeout(() => {
         this.animandoOla = false;
         this.bloquearBoton = false;

@@ -1,9 +1,10 @@
-import { Component, Input, ViewChild, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConsolaCodigoComponent } from '../consola-codigo/consola-codigo.component';
 import { BarajaTarjetasComponent, TarjetaConfig } from '../baraja-tarjetas/baraja-tarjetas.component';
 import { NotificationService } from '../services/notification.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
+import { Router } from '@angular/router';
 
 export interface Instruccion {
   texto: string;
@@ -26,13 +27,22 @@ export class LayoutJuegoComponent {
   ejecutando: boolean = false;
 
   // Servicio de Notificaciones
+  // Servicio de Notificaciones
   private notificationService = inject(NotificationService);
+  private router = inject(Router);
 
-  // Referencia a la consola hija
+  // Referencia a los componentes hijos
   @ViewChild(ConsolaCodigoComponent) consola!: ConsolaCodigoComponent;
+  @ViewChild(BarajaTarjetasComponent) baraja!: BarajaTarjetasComponent;
 
   // Configuración de las tarjetas recibida desde el "Cartucho"
   @Input() configuracionTarjetas: TarjetaConfig[] = [];
+
+  // Emisor hacia el nivel (Ogro) con el código ensamblado
+  @Output() ejecutarJuego = new EventEmitter<string>();
+
+  // Emisor hacia el nivel para el uso de pociones
+  @Output() onUsarItem = new EventEmitter<'roja' | 'verde' | 'amarilla'>();
 
   // Método accionado por la Baraja para agregar código
   agregarCodigo(tarjeta: TarjetaConfig) {
@@ -60,6 +70,15 @@ export class LayoutJuegoComponent {
     this.lineasCodigo = [{ texto: '', color: '#d4d4d4', tieneError: false }];
   }
 
+  // Teardown: Resetear Inventario
+  resetearInventario() {
+    if (this.baraja) {
+      this.baraja.estadoObjetos.vida.consumida = false;
+      this.baraja.estadoObjetos.clarividencia.consumida = false;
+      this.baraja.estadoObjetos.tiempo.consumida = false;
+    }
+  }
+
   // Toolbar: Ejecutar
   ejecutarCodigo() {
     const hayErrores = this.lineasCodigo.some(linea => linea.tieneError);
@@ -74,8 +93,14 @@ export class LayoutJuegoComponent {
     }
 
     this.ejecutando = true;
-    console.log('Ejecutando código...', this.lineasCodigo);
-    // Simulación de fin de ejecución tras 2 segundos
+    
+    // Concatenamos todas las líneas en un solo gran string (pergamino)
+    const codigoEnsamblado = this.lineasCodigo.map(l => l.texto).join('\n');
+    
+    // Lo disparamos hacia el Nivel (Ogro)
+    this.ejecutarJuego.emit(codigoEnsamblado);
+    
+    // Apagamos la UI de ejecución poco después
     setTimeout(() => this.ejecutando = false, 2000);
   }
 
@@ -87,8 +112,6 @@ export class LayoutJuegoComponent {
   }
 
   abandonarPartida() {
-    // Aquí puedes integrar la lógica de enrutamiento con el Router de Angular
-    // para volver al mapa principal: this.router.navigate(['/mapa']);
-    console.log("Abandonando misión... Redirigiendo al mapa.");
+    this.router.navigate(['/pantalla-principal']);
   }
 }
