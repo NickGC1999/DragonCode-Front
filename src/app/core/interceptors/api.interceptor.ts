@@ -8,15 +8,16 @@ import { NotificationService } from '../../services/notification.service';
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const notificationService = inject(NotificationService);
   
-  // Clonar la petición y agregar la URL base del entorno
-  // Asumimos que req.url empieza con '/' o la apiUrl no termina en '/', ajustamos para evitar dobles slashes.
+  // BYPASS: Las peticiones a assets locales NO deben pasar por el prefijo de la API
+  const isLocalAsset = req.url.startsWith('/assets/') || req.url.startsWith('assets/');
   const isAbsoluteUrl = req.url.startsWith('http');
-  const baseUrl = environment.apiUrl.endsWith('/') ? environment.apiUrl.slice(0, -1) : environment.apiUrl;
-  const path = req.url.startsWith('/') ? req.url : `/${req.url}`;
   
-  const apiReq = isAbsoluteUrl ? req : req.clone({
-    url: `${baseUrl}${path}`
-  });
+  let apiReq = req;
+  if (!isAbsoluteUrl && !isLocalAsset) {
+    const baseUrl = environment.apiUrl.endsWith('/') ? environment.apiUrl.slice(0, -1) : environment.apiUrl;
+    const path = req.url.startsWith('/') ? req.url : `/${req.url}`;
+    apiReq = req.clone({ url: `${baseUrl}${path}` });
+  }
 
   return next(apiReq).pipe(
     catchError((error: HttpErrorResponse) => {

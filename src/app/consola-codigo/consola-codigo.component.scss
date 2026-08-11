@@ -66,7 +66,7 @@
   font-size: 1.1rem;
   font-weight: bold;
   caret-color: white;
-  min-width: calc(var(--char-count) * 1ch + 4rem);
+  min-width: calc(var(--char-count) * 1ch + 1rem);
 }
 
 .line-input.is-executing {
@@ -81,8 +81,6 @@
 .code-line-wrapper {
   position: relative;
   flex-grow: 1;
-  width: max-content;
-  min-width: 100%;
 }
 
 /* Forzar texto blanco cuando hay error */
@@ -90,18 +88,6 @@
   color: white !important;
 }
 
-/* Onda roja debajo del texto, renderizada como SVG repetido */
-.code-line-wrapper.has-error::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 0;
-  width: calc(var(--char-count) * 1ch); /* Ancho dinámico basado en caracteres */
-  height: 4px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' preserveAspectRatio='none'%3E%3Cpath d='M0,2 Q1.5,0 3,2 T6,2' fill='none' stroke='%23d16969' stroke-width='1.2'/%3E%3C/svg%3E"); /* Rojo suave VS Code */
-  background-repeat: repeat-x;
-  pointer-events: none;
-}
 
 /* ==========================================================================
    3. Rediseño de la Barra de Herramientas (Toolbar)

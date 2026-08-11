@@ -76,6 +76,8 @@
   flex-shrink: 0; /* El título NUNCA se scrollea */
 }
 
+
+
 /* ==========================================================================
    BOTÓN DIVISOR — Centrado en la línea entre paneles
    ========================================================================== */
@@ -182,27 +184,36 @@
   display: flex;
   flex-direction: column;
   width: max-content;
-  cursor: pointer;
-  border: 2px solid black;
-  border-radius: 4px;
+  border: 2px solid #000;
+  border-radius: 4px; /* Un redondeo mínimo, casi cuadrado */
   padding: 0.5rem;
   word-break: break-word;
-  color: white;
+  
+  /* Sombra dura hacia abajo que simula la altura del bloque, 
+     más un brillo interno (inset) blanco arriba para darle volumen 16-bits */
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.3), 0 5px 0 #000;
+  
+  color: #FFF;
   text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
-  transition: transform 0.1s step-end, filter 0.1s ease;
-  image-rendering: pixelated;
-  /* El drop shadow global de la tarjeta para efecto elevado */
-  filter: drop-shadow(0 4px 0 #000);
+  
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  
+  /* Alineación para que no salte al empujar */
+  margin-bottom: 5px; 
 }
 
 .action-card:hover {
-  transform: translateY(-2px);
-  filter: drop-shadow(0 6px 0 #000) brightness(1.1);
+  transform: translateY(-1px);
+  /* Al hacer hover, se eleva un poco más */
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), 0 6px 0 #000;
 }
 
 .action-card:active {
-  transform: translateY(4px);
-  filter: drop-shadow(0 0 0 transparent);
+  /* Física del click: El botón se hunde 5px */
+  transform: translateY(5px);
+  /* La sombra externa desaparece al estar presionado */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0px 0 #000;
 }
 
 .card-title {
@@ -225,15 +236,91 @@
 }
 
 .objects-container {
-  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  height: 100%;
 }
 
-.empty-msg {
-  color: #444;
-  font-family: 'TuFuentePixel', monospace;
-  font-size: 0.8rem;
-  text-align: center;
-  margin-top: 15px;
+/* ==========================================================================
+   OBJETOS MÁGICOS
+   ========================================================================== */
+/* Sockets y Tamaños Base */
+.objeto-socket {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.objeto-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  width: auto;
+  height: auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Tamaños Diferenciados */
+.objeto-img.libro {
+  max-width: 45px;
+}
+
+.objeto-img.pocion {
+  max-width: 32px;
+}
+
+/* Efectos visuales base para objetos mágicos */
+.magic-obj {
+  /* Al reducir imágenes grandes, 'pixelated' las rompe. Dejamos el renderizado suave por defecto */
+  image-rendering: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.magic-obj:hover {
+  transform: rotate(-5deg) scale(1.1);
+}
+
+.obj-libro:hover { filter: drop-shadow(0 0 8px #9b59b6); }
+.obj-clarividencia:hover { filter: drop-shadow(0 0 8px #F0CF5C); }
+.obj-vida:hover { filter: drop-shadow(0 0 8px #E46B80); }
+.obj-tiempo:hover { filter: drop-shadow(0 0 8px #379462); }
+
+.placeholder-vacio {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(119, 221, 202, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Feedback Visual de Error */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-2deg); }
+  75% { transform: translateX(4px) rotate(2deg); }
+}
+
+.temblor {
+  animation: shake 0.4s;
+}
+
+/* ANIMACIÓN DE NEGACIÓN (Poción al máximo de vida) */
+@keyframes sacudidaNegacion {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animacion-negacion {
+  animation: sacudidaNegacion 0.4s ease-in-out;
 }
 
 /* ==========================================================================
@@ -250,91 +337,104 @@
 }
 
 /* ==========================================================================
-   AJUSTES RESPONSIVOS (Mobile)
+   ANIMACIÓN OBJETOS (Temblor en Desktop, Ola en Mobile)
    ========================================================================== */
-.mobile-tabs-header {
-  display: none;
+.animacion-objeto {
+  animation: shake 0.4s ease-in-out;
 }
 
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none !important;
-  }
-  
-  .mobile-hidden {
-    display: none !important;
-  }
+/* ==========================================================================
+   CABECERA DE PESTAÑAS (Oculta por defecto en escritorio)
+   ========================================================================== */
+.tabs-header {
+  display: none;
+}
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #7a8fa6;
+  font-family: 'TuFuentePixel', monospace;
+  font-size: 0.9rem;
+  padding: 12px 0;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+.tab-btn.active {
+  color: #77DDCA;
+}
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 3px;
+  background-color: #77DDCA;
+  transition: transform 0.3s ease-in-out;
+}
+.tab-indicator.es-objetos {
+  transform: translateX(100%);
+}
 
-  .mobile-tabs-header {
+/* ==========================================================================
+   AJUSTES RESPONSIVOS (Tablet, Mobile & Zoom <= 1280px)
+   ========================================================================== */
+@media (max-width: 1280px) {
+  .desktop-only { display: none !important; }
+  
+  .tabs-header {
     display: flex;
     flex-direction: row;
+    position: relative;
     border-bottom: 2px solid #333;
     background-color: #1a2233;
   }
 
-  .tab-btn {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #7a8fa6;
-    font-family: 'TuFuentePixel', monospace;
-    font-size: 0.9rem;
-    padding: 8px 0;
-    cursor: pointer;
-    text-align: center;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s ease;
+  .mobile-hidden { display: none !important; }
+
+  /* Aseguramos que la caja contenedora apile sus paneles como 1 sola ventana */
+  .inventory-section {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    flex-grow: 1;
   }
 
-  .tab-btn.active {
-    color: #4a9e8e;
-    border-bottom: 3px solid #4a9e8e;
-    background-color: rgba(119, 221, 202, 0.1);
-  }
-
-  /* En móviles forzamos flex column para apilar Acciones (arriba) y Objetos (abajo) */
-  .inventory-body {
-    flex-direction: column;
-  }
-  
-  /* El panel de acciones toma el espacio principal */
-  .actions-section {
-    width: 100% !important;
-    height: 100% !important; /* Cambiado de auto a 100% para evitar deformaciones */
-    flex-grow: 1; /* Permite que tome el espacio disponible */
-    border-bottom: none;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* El panel de objetos se muestra siempre en la parte inferior */
-  .objects-section {
-    width: 100% !important;
-    height: 100% !important; /* Cambiado de auto a 100% */
-    border-left: none;
-    flex-grow: 1; /* Para que tome todo el espacio cuando esté activa */
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Sobrescribimos el estado "hidden" para que NUNCA se oculte en móviles */
+  /* Sobrescribimos el estado "hidden" del drawer para que no colapse objetos */
   .objects-section.hidden {
-    height: auto;
     opacity: 1;
+    width: 100% !important;
     padding: 0;
     border: none;
   }
 
-  /* Ocultamos el botón divisor porque ambos paneles siempre están visibles apilados */
-  .toggle-drawer-btn {
-    display: none !important;
+  .objects-container {
+    flex-direction: row;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    justify-content: space-evenly;
+    align-items: center;
+    align-content: center;
+    padding: 1rem;
+    height: 100%;
+    gap: 1rem;
   }
 
-  .inventory-section {
-    padding: 2px;
+  /* Cambiar a la animación de ola en pantallas tipo tab */
+  .animacion-objeto {
+    animation: saltito 0.4s ease-in-out;
   }
 
-  /* Grilla de tarjetas: forzamos que se acomoden horizontalmente */
+  /* Hacer los objetos más grandes para aprovechar el ancho */
+  .objeto-socket {
+    width: 65px;
+    height: 65px;
+  }
+  .objeto-img.libro { max-width: 65px; }
+  .objeto-img.pocion { max-width: 50px; }
+  .placeholder-vacio { width: 45px; height: 45px; }
+
   .cards-grid {
     display: flex;
     flex-direction: row;
@@ -344,31 +444,16 @@
     padding: 6px;
   }
 
-  /* Reducimos el tamaño de las tarjetas drásticamente para que quepan varias por fila */
   .action-card {
     padding: var(--mobile-card-padding-y) var(--mobile-card-padding-x);
     border-width: 1px;
-    /* max-width permite que se encojan si es necesario, pero intentan ajustarse al contenido */
-    max-width: calc(50% - 6px); /* Máximo 2 por fila si el texto es muy largo */
+    max-width: calc(50% - 6px);
   }
 
-  .card-title {
-    font-size: var(--mobile-card-title-size);
-    margin-bottom: 2px;
-    padding-bottom: 1px;
-  }
-
-  .card-code {
-    font-size: var(--mobile-card-code-size);
-  }
-
-  .inventory-main-header {
-    padding: 4px 10px;
-  }
-
-  .inventory-title {
-    font-size: 0.75rem;
-  }
+  .card-title { font-size: var(--mobile-card-title-size); margin-bottom: 2px; padding-bottom: 1px; }
+  .card-code { font-size: var(--mobile-card-code-size); }
+  .inventory-main-header { padding: 4px 10px; }
+  .inventory-title { font-size: 0.75rem; }
 }
 
 /* ==========================================================================

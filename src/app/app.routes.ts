@@ -31,5 +31,9 @@ export const routes: Routes = [
   {
     path: 'aventura/nivel/:id',
     loadComponent: () => import('./nivel-ogro/nivel-ogro.component').then(m => m.NivelOgroComponent)
+  },
+  {
+    path: 'crear-aula/ogro',
+    loadComponent: () => import('./nivel-ogro/nivel-ogro.component').then(m => m.NivelOgroComponent)
   }
 ];

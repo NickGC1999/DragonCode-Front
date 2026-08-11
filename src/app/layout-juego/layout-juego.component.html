@@ -22,7 +22,8 @@
       <app-baraja-tarjetas 
         class="cards-section"
         [configuracion]="configuracionTarjetas" 
-        (instruccionSeleccionada)="agregarCodigo($event)">
+        (instruccionSeleccionada)="agregarCodigo($event)"
+        (onUsarItem)="onUsarItem.emit($event)">
       </app-baraja-tarjetas>
     </aside>
   </div>

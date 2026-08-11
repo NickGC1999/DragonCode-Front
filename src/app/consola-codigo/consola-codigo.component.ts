@@ -40,11 +40,16 @@ export class ConsolaCodigoComponent {
   }
 
   // Insertar código directamente desde las tarjetas, contextualmente en la línea activa
-  insertarDesdeTarjeta(tarjeta: { texto: string; color: string; accion: string }) {
+  insertarDesdeTarjeta(tarjeta: { nombre: string; colorBoton: string; colorConsola: string; accion: string }) {
+    // Protección contra índices desfasados (ej. si el nivel se purga y el arreglo se reduce a 1)
+    if (this.lineaActivaIndex >= this.lineas.length || this.lineaActivaIndex < 0) {
+      this.lineaActivaIndex = Math.max(0, this.lineas.length - 1);
+    }
+
     if (this.lineas[this.lineaActivaIndex] && this.lineas[this.lineaActivaIndex].texto === '') {
-      this.lineas[this.lineaActivaIndex] = { texto: tarjeta.accion, color: tarjeta.color, tieneError: false };
+      this.lineas[this.lineaActivaIndex] = { texto: tarjeta.accion, color: tarjeta.colorConsola, tieneError: false };
     } else {
-      this.lineas.splice(this.lineaActivaIndex + 1, 0, { texto: tarjeta.accion, color: tarjeta.color, tieneError: false });
+      this.lineas.splice(this.lineaActivaIndex + 1, 0, { texto: tarjeta.accion, color: tarjeta.colorConsola, tieneError: false });
       this.lineaActivaIndex++;
     }
     // NOTA: Se ha eliminado el .focus() programático para evitar que el teclado móvil salte inoportunamente
