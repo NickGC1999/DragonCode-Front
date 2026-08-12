@@ -5,6 +5,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { LayoutJuegoComponent } from '../layout-juego/layout-juego.component';
+import { LoaderService } from '../services/loader.service';
 import { TarjetaConfig } from '../baraja-tarjetas/baraja-tarjetas.component';
 
 export type TipoTerreno = 'vacio' | 'suelo' | 'sueloroto' | 'suelo-ogro' | 'salida' | 'meta-ogro';
@@ -136,10 +137,14 @@ export class NivelOgroComponent implements OnInit, AfterViewInit, OnDestroy {
     private notificationService: NotificationService,
     private http: HttpClient,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private loaderService: LoaderService
   ) {}
 
   ngOnInit() {
+    // APP SHELL: Mostrar pantalla de carga instantánea
+    this.loaderService.mostrar('CARGANDO NIVEL');
+
     // 1. Determinar el rol basado en la URL
     const urlActual = this.router.url;
     this.esModoProfesor = urlActual.includes('crear-aula');
@@ -147,6 +152,7 @@ export class NivelOgroComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.esModoProfesor) {
       // MODO CREADOR: Lienzo en blanco, listo para editar
       this.generarTableroPrueba();
+      this.loaderService.ocultar();
     } else {
       // MODO JUGADOR: Auto-cargar el nivel oficial JSON
       this.cargarNivelOficial();
@@ -210,9 +216,15 @@ export class NivelOgroComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Forzar recálculo físico del Grid tras la carga de datos
         this.cdr.detectChanges();
+        
         setTimeout(() => {
           this.forzarRecalculoFisico();
         }, 50);
+
+        // APP SHELL: Ocultar con transición suave tras dar tiempo a la descarga de assets
+        setTimeout(() => {
+          this.loaderService.ocultar();
+        }, 800);
       },
       error: (err) => {
         console.error('Error cargando el nivel. Verifica la ruta en assets.', err);

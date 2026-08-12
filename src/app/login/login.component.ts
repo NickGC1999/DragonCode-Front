@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router'; // 1. Importas el enrutador
+import { LoaderService } from '../services/loader.service';
 
 interface Rune {
   symbol: string;
@@ -33,9 +34,16 @@ export class LoginComponent implements OnInit {
     'assets/images/draco/drakosorprendido.png'
   ];
 
+  constructor(private loaderService: LoaderService) {}
+
   ngOnInit(): void {
     this.setRandomAvatar();
     this.generateRunes();
+    
+    // APP SHELL BOOT: Ocultar pantalla de carga inicial suavemente
+    setTimeout(() => {
+      this.loaderService.ocultar();
+    }, 300);
   }
 
   private setRandomAvatar(): void {
