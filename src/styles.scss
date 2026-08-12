@@ -36,3 +36,81 @@ html, body {
 ::-webkit-scrollbar-corner { 
   background: #1e1e1e; 
 }
+
+/* =========================================
+   APP SHELL: PANTALLA DE CARGA GLOBAL
+   ========================================= */
+.pantalla-carga-global {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0B0D13;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* Por encima de todo */
+  
+  /* Transición suave para la entrada/salida */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+
+  &.oculto {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.draco-sprite {
+  width: 167px; /* Asumiendo 1/4 del ancho real proporcional a la pantalla */
+  height: 162px;
+  background-image: url('/assets/images/pantallacarga/spritecarga.png');
+  background-size: 400% 100%;
+  image-rendering: pixelated;
+  /* Bucle ping-pong: 1, 2, 3, 4, 3, 2, 1 */
+  animation: draco-run 0.7s steps(4, end) infinite alternate;
+  margin-bottom: 20px;
+}
+
+@keyframes draco-run {
+  100% { background-position: -400% 0; }
+}
+
+.texto-carga {
+  color: #ffffff;
+  font-family: 'Courier New', Courier, monospace; /* Cambia a tu fuente retro */
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.puntos-animados::after {
+  content: '.';
+  animation: animacion-puntos 1.5s infinite;
+}
+
+@keyframes animacion-puntos {
+  0%   { content: '.'; }
+  25%  { content: '..'; }
+  50%  { content: '...'; }
+  75%  { content: '..'; }
+  100% { content: '.'; }
+}
+
+/* RESPONSIVIDAD MÓVIL PANTALLA CARGA */
+@media (max-width: 768px) {
+  .pantalla-carga-global {
+    /* Desplaza el contenido ligeramente hacia arriba del centro matemático */
+    padding-bottom: 30vh;
+  }
+  
+  .draco-sprite {
+    /* Reduce el tamaño un 15% (de 1 a 0.85) */
+    transform: scale(0.85);
+    margin-bottom: 10px; /* Ajustamos margen por la reducción */
+  }
+}
