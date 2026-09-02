@@ -50,35 +50,50 @@
   <!-- Fila 1: Nombre y Apellido -->
   <div class="input-group">
     <label>Nombre</label>
-    <input type="text" placeholder="Tu nombre..." required>
+    <input type="text" [(ngModel)]="nombre" name="nombre" placeholder="Tu nombre..." required>
   </div>
   <div class="input-group">
     <label>Apellido</label>
-    <input type="text" placeholder="Tu apellido..." required>
+    <input type="text" [(ngModel)]="apellido" name="apellido" placeholder="Tu apellido..." required>
   </div>
 
   <!-- Fila 2: Correo (Ocupa todo el ancho) -->
   <div class="input-group full-width">
     <label>Correo Electrónico</label>
-    <input type="email" placeholder="draco@dragoncode.com" required>
+    <input type="email" [(ngModel)]="email" name="email" placeholder="draco@dragoncode.com" required>
   </div>
 
   <!-- Fila 3: Contraseñas -->
   <div class="input-group">
     <label>Contraseña</label>
-    <input type="password" placeholder="••••••••" required pattern="(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+">
-    <!-- Mensaje de error pre-estilizado (Pronto lo controlaremos con TypeScript) -->
-    <span class="error-text">* Falta 1 Mayúscula, 1 Número y 1 Signo</span>
+    <div class="input-wrapper">
+      <input [type]="mostrarClave ? 'text' : 'password'" [(ngModel)]="password" (ngModelChange)="validarPassword($event)" name="password" placeholder="••••••••" required [ngClass]="{'input-error': errorRequisitos || errorCoincidencia}">
+      <button type="button" class="btn-ver-clave" (click)="toggleClave()">
+        <span class="material-symbols-outlined icono-toggle">{{ mostrarClave ? 'visibility_off' : 'visibility' }}</span>
+      </button>
+    </div>
+    <!-- Lista de Requisitos -->
+    <ul class="password-requirements">
+      <li [ngClass]="{'valido': requisitosClave.longitud}">Mínimo 6 caracteres</li>
+      <li [ngClass]="{'valido': requisitosClave.mayuscula}">1 Mayúscula</li>
+      <li [ngClass]="{'valido': requisitosClave.numero}">1 Número</li>
+      <li [ngClass]="{'valido': requisitosClave.especial}">1 Especial</li>
+    </ul>
   </div>
   <div class="input-group">
     <label>Confirmar Contraseña</label>
-    <input type="password" placeholder="••••••••" required>
+    <div class="input-wrapper">
+      <input [type]="mostrarConfirmacion ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="••••••••" required [ngClass]="{'input-error': errorCoincidencia}">
+      <button type="button" class="btn-ver-clave" (click)="toggleConfirmacion()">
+        <span class="material-symbols-outlined icono-toggle">{{ mostrarConfirmacion ? 'visibility_off' : 'visibility' }}</span>
+      </button>
+    </div>
   </div>
 
   <!-- Fila 4: Términos y Condiciones -->
   <div class="checkbox-group full-width">
     <label class="custom-checkbox">
-      <input type="checkbox" required>
+      <input type="checkbox" [(ngModel)]="aceptaTerminos" name="aceptaTerminos" [ngClass]="{'input-error': errorTerminos}">
       Acepto los términos y condiciones.
     </label>
   </div>
@@ -86,7 +101,9 @@
   <!-- Fila 5: El Botón de Acción -->
   <div class="action-group full-width">
     <a routerLink="/login" class="forge-btn forge-btn--back">VOLVER</a>
-    <button type="submit" class="forge-btn">FORJAR CUENTA</button>
+    <button type="button" (click)="forjarCuenta()" [disabled]="isLoading" class="forge-btn">
+      {{ isLoading ? 'FORJANDO...' : 'FORJAR CUENTA' }}
+    </button>
   </div>
 
 </div>

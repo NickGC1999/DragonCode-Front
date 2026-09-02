@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../services/notification.service';
@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
   templateUrl: './perfil.component.html',
   styleUrl: './perfil.component.scss'
 })
-export class PerfilComponent {
+export class PerfilComponent implements OnInit {
   @Input() avatarActual: string = 'assets/images/draco/dracobase1.png';
   @Output() closeModal = new EventEmitter<void>();
 
@@ -32,7 +32,7 @@ export class PerfilComponent {
   currentView: 'perfil' | 'password' | 'confirmEmail' = 'perfil';
 
   // ── ESTADO DE EDICIÓN EN LÍNEA ──
-  // Guarda el nombre del campo que se está editando ('nombre', 'apellido', 'correo')
+  // Guarda el nombre del campo que se está editando ('nombre', 'apellido', 'email')
   editingField: string | null = null;
   // Guarda el valor temporal mientras se edita para poder cancelar
   editingValue: string = '';
@@ -40,6 +40,11 @@ export class PerfilComponent {
   // ── ESTADO PARA CONFIRMAR CORREO ──
   pendingEmail: string = '';
   confirmEmailPass: string = '';
+  mostrarClaveCorreo: boolean = false;
+
+  toggleClaveCorreo(): void {
+    this.mostrarClaveCorreo = !this.mostrarClaveCorreo;
+  }
 
 
 
@@ -50,6 +55,23 @@ export class PerfilComponent {
     confirmPass: ''
   };
   passwordError: boolean = false;
+  
+  // ── ESTADOS DE VISIBILIDAD DE CONTRASEÑA ──
+  mostrarActual: boolean = false;
+  mostrarNueva: boolean = false;
+  mostrarConfirmacion: boolean = false;
+
+  toggleActual(): void {
+    this.mostrarActual = !this.mostrarActual;
+  }
+
+  toggleNueva(): void {
+    this.mostrarNueva = !this.mostrarNueva;
+  }
+
+  toggleConfirmacion(): void {
+    this.mostrarConfirmacion = !this.mostrarConfirmacion;
+  }
 
   // ── ESTADO DE RECUPERACIÓN ──
   recoverySent = false;
@@ -76,11 +98,11 @@ export class PerfilComponent {
     this.editingField = field;
     // Clonamos el valor actual al valor temporal usando el estado síncrono
     const currentProfile = this.userService.getCurrentProfile();
-    this.editingValue = currentProfile[field];
+    this.editingValue = String(currentProfile[field] || '');
   }
 
   saveField(field: keyof UserProfile): void {
-    if (field === 'correo') {
+    if (field === 'email') {
       // En vez de guardar inmediatamente, pedimos contraseña
       this.pendingEmail = this.editingValue;
       this.currentView = 'confirmEmail';
@@ -90,11 +112,9 @@ export class PerfilComponent {
     }
 
     // Actualización reactiva usando el UserService simulando backend
-    this.userService.updateProfile({ [field]: this.editingValue }).subscribe(() => {
-      console.log(`Campo ${field} actualizado mediante servicio`);
-      this.editingField = null;
-      this.notificationService.show('Información actualizada exitosamente', 'success');
-    });
+    this.userService.updateProfileState({ [field]: this.editingValue });
+    this.editingField = null;
+    this.notificationService.show('Información actualizada exitosamente', 'success');
   }
 
   cancelEdit(): void {
@@ -108,10 +128,9 @@ export class PerfilComponent {
     // Simulación: asumiremos que la contraseña correcta es "123456" 
     // TODO: Conectar con backend
     if (this.confirmEmailPass === '123456') {
-      this.userService.updateProfile({ correo: this.pendingEmail }).subscribe(() => {
-        this.notificationService.show('Cambio de correo exitoso', 'success');
-        this.goToProfileView();
-      });
+      this.userService.updateProfileState({ email: this.pendingEmail });
+      this.notificationService.show('Cambio de correo exitoso', 'success');
+      this.goToProfileView();
     } else {
       this.notificationService.show('Contraseña incorrecta', 'error');
     }
@@ -122,21 +141,53 @@ export class PerfilComponent {
   }
 
   // ── MÉTODOS DE CONTRASEÑA ──
-  confirmPasswordChange(): void {
-    const pass = this.passwordData.newPass || '';
-    const hasUpper = /[A-Z]/.test(pass);
-    const hasLower = /[a-z]/.test(pass);
-    const hasNumber = /[0-9]/.test(pass);
-    const hasSymbol = /[\W_]/.test(pass);
+  requisitosClave = {
+    longitud: false,
+    mayuscula: false,
+    numero: false,
+    especial: false
+  };
 
-    if (!hasUpper || !hasLower || !hasNumber || !hasSymbol) {
-      this.passwordError = true;
+  errorVacio: boolean = false;
+  errorRequisitos: boolean = false;
+  errorCoincidencia: boolean = false;
+
+  validarPassword(clave: string): void {
+    if (!clave) {
+      this.requisitosClave = { longitud: false, mayuscula: false, numero: false, especial: false };
+      return;
+    }
+    this.requisitosClave.longitud = clave.length >= 6;
+    this.requisitosClave.mayuscula = /[A-Z]/.test(clave);
+    this.requisitosClave.numero = /[0-9]/.test(clave);
+    this.requisitosClave.especial = /[^a-zA-Z0-9]/.test(clave);
+  }
+
+  confirmPasswordChange(): void {
+    // Reset errores
+    this.errorVacio = false;
+    this.errorRequisitos = false;
+    this.errorCoincidencia = false;
+
+    if (!this.passwordData.oldPass || !this.passwordData.newPass || !this.passwordData.confirmPass) {
+      this.errorVacio = true;
+      this.notificationService.show('Por favor, completa todos los campos de contraseña.', 'error');
       return;
     }
 
-    this.passwordError = false;
-    console.log('Solicitud de cambio de contraseña:', this.passwordData);
-    
+    const { longitud, mayuscula, numero, especial } = this.requisitosClave;
+    if (!longitud || !mayuscula || !numero || !especial) {
+      this.errorRequisitos = true;
+      this.notificationService.show('La nueva contraseña no cumple con los requisitos de seguridad.', 'error');
+      return;
+    }
+
+    if (this.passwordData.newPass !== this.passwordData.confirmPass) {
+      this.errorCoincidencia = true;
+      this.notificationService.show('Las contraseñas no coinciden.', 'error');
+      return;
+    }
+
     // Dispara el toast global
     this.notificationService.show('Contraseña actualizada exitosamente', 'success');
     

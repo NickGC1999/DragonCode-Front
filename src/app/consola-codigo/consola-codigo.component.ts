@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChildren, QueryList, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Instruccion } from '../layout-juego/layout-juego.component';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-consola-codigo',
@@ -11,8 +12,11 @@ import { Instruccion } from '../layout-juego/layout-juego.component';
   styleUrl: './consola-codigo.component.scss'
 })
 export class ConsolaCodigoComponent {
+  private notificationService = inject(NotificationService);
+
   @Input() lineas: Instruccion[] = [];
   @Input() ejecutando: boolean = false;
+  @Input() antiCopiaActivo: boolean = false;
   
   @Output() lineaBorrada = new EventEmitter<number>();
   @Output() onEjecutar = new EventEmitter<void>();
@@ -32,6 +36,105 @@ export class ConsolaCodigoComponent {
   private timeouts: { [key: number]: any } = {};
 
   lineaActivaIndex: number = 0;
+
+  // === POCIÓN DE CLARIVIDENCIA ===
+  @Input() nivelActual: number = 1;
+
+  solucionesMagicas: { [nivel: number]: string[] } = {
+    1: [
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()'
+    ],
+    2: [
+      'ogro.caminarIzquierda()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()'
+    ],
+    3: [
+      'ogro.caminarArriba()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarArriba()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()'
+    ],
+    4: [
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarArriba()',
+      'ogro.caminarIzquierda()',
+      'ogro.caminarArriba()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarArriba()',
+      'ogro.caminarArriba()',
+      'ogro.caminarArriba()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarDerecha()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()',
+      'ogro.caminarAbajo()'
+    ]
+  };
+
+  pocionActiva = false;
+  overlayDorado = false;
+  ojoAnimado = false;
+  pocionTimeout: any;
+  fadeTimeout: any;
+
+  usarPocionClarividencia() {
+    this.pocionActiva = true;
+    this.detonarDestello();
+
+    if (this.pocionTimeout) clearTimeout(this.pocionTimeout);
+    this.pocionTimeout = setTimeout(() => {
+      this.pocionActiva = false;
+    }, 20000);
+  }
+
+  detonarDestello() {
+    this.overlayDorado = true;
+    
+    // Feedback visual del ojo
+    this.ojoAnimado = true;
+    setTimeout(() => this.ojoAnimado = false, 300);
+
+    if (this.fadeTimeout) clearTimeout(this.fadeTimeout);
+    this.fadeTimeout = setTimeout(() => {
+      this.overlayDorado = false;
+    }, 2500);
+  }
 
   enfocarUltimoInput() {
     if (this.inputs && this.inputs.length > 0) {
@@ -154,5 +257,12 @@ export class ConsolaCodigoComponent {
   clickLimpiar(event: Event) {
     event.stopPropagation();
     this.onLimpiar.emit();
+  }
+
+  preventPaste(event: Event) {
+    if (this.antiCopiaActivo) {
+      event.preventDefault();
+      this.notificationService.show('🛡️ El profesor ha bloqueado copiar y pegar.', 'error');
+    }
   }
 }
