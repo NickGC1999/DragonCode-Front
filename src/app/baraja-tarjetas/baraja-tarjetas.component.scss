@@ -174,7 +174,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 10px; /* El padding que antes estaba en inventory-section */
+  padding: 10px;
+  align-items: center; /* El padding que antes estaba en inventory-section */
 }
 
 /* ==========================================================================
@@ -183,8 +184,11 @@
 .action-card {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  min-width: 60px;
+  text-align: center;
+  min-height: 56px;
+  min-width: 80px;
   width: max-content;
   border: 2px solid #000;
   border-radius: 4px; /* Un redondeo mínimo, casi cuadrado */
@@ -225,15 +229,16 @@
 
 .titulo-tarjeta {
   font-family: 'TuFuentePixel', monospace;
-  font-size: 0.65rem;
+  font-size:  0.75rem;
   color: rgba(255, 255, 255, 0.75);
-  margin-bottom: 2px;
+  margin-bottom:  4px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .card-title {
   font-family: 'TuFuentePixel', monospace;
-  font-size: 1.1rem;
+  font-size:  0.9rem;
   font-weight: bold;
   text-align: center;
   margin-bottom: 5px;
@@ -243,7 +248,7 @@
 
 .card-code {
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.75rem;
+  font-size:  0.9rem;
   font-weight: bold;
   text-align: center;
   margin-top: 2px;
