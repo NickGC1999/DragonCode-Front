@@ -26,7 +26,7 @@
                  (mousedown)="$event.preventDefault()">
               <span class="titulo-tarjeta" *ngIf="tarjeta.titulo">{{ tarjeta.titulo }}</span>
               <span class="card-title">{{ tarjeta.nombre }}</span>
-              <span class="card-code">{{ tarjeta.accion }}</span>
+              <span class="card-code" *ngIf="tarjeta.accion !== tarjeta.nombre">{{ tarjeta.accion }}</span>
             </div>
           }
         </div>

@@ -127,7 +127,7 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
       let andamiaje: any[] = [];
       switch (this.pasoAndamiaje) {
         case 0:
-          andamiaje = [{ titulo: "Estructura", etiqueta: "Control temperatura", codigo: "si(taladro.temperatura ▯ ▯) {\n    ▯\n  }", tono: "dorado" }];
+          andamiaje = [{ etiqueta: "Control temperatura", codigo: "si(taladro.temperatura ▯ ▯) {\n    ▯\n  }", tono: "dorado" }];
           break;
         case 1:
           andamiaje = [

@@ -13,7 +13,7 @@ export class EvaluadorTaladroService {
   private readonly estrategiaCarbonRegex = /si\s*\(\s*taladro\.carbon\s*==\s*0\s*\)\s*\{\s*taladro\.recargarCarbon\(\);?\s*\}/i;
 
   evaluarAndamiajeFase1(codigo: string): { valido: boolean, tipoFallo: string, operador: string, valor: number, accion: string } {
-    const defaultRes = { valido: false, tipoFallo: 'SINTAXIS', operador: '', valor: 0, accion: '' };
+    const defaultRes = { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', operador: '', valor: 0, accion: '' };
     const andamiajeRegex = /si\s*\(\s*taladro\.temperatura\s*([><])\s*(\d+)\s*\)\s*\{\s*taladro\.(liberarVapor|apagarMotor|extraerCarbon)\(\);?\s*\}/i;
     const match = codigo.match(andamiajeRegex);
     
@@ -31,18 +31,14 @@ export class EvaluadorTaladroService {
 
     if (accion === 'liberarVapor') {
       if (valor <= 100 || operador === '<') return { valido: false, tipoFallo: 'AHOGO', ...baseRes };
-      if (valor > 100) return { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', ...baseRes };
     }
 
     if (accion === 'apagarMotor') {
       return { valido: false, tipoFallo: 'DESCOMPUESTO', ...baseRes };
     }
 
-    if (accion === 'extraerCarbon') {
-      return { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', ...baseRes };
-    }
-
-    return { valido: false, tipoFallo: 'DESCONOCIDO', ...baseRes };
+    // Default Fallback absoluto: cualquier otra combinación, sintaxis rota o caso no contemplado colapsa la máquina
+    return { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', ...baseRes };
   }
 
   evaluar(codigo: string, fase: FaseTaladro = 1): ResultadoEvaluacionTaladro {
