@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 export interface TarjetaConfig {
   nombre: string;
+  titulo?: string;
   colorBoton: string;
   colorConsola: string;
   accion: string;

@@ -24,6 +24,7 @@
                  [class.salto-ola]="animandoOla"
                  (click)="seleccionarTarjeta(tarjeta)"
                  (mousedown)="$event.preventDefault()">
+              <span class="titulo-tarjeta" *ngIf="tarjeta.titulo">{{ tarjeta.titulo }}</span>
               <span class="card-title">{{ tarjeta.nombre }}</span>
               <span class="card-code">{{ tarjeta.accion }}</span>
             </div>

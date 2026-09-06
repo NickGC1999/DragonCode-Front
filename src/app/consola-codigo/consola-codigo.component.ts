@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Instruccion } from '../layout-juego/layout-juego.component';
 import { NotificationService } from '../services/notification.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-consola-codigo',
@@ -12,7 +13,19 @@ import { NotificationService } from '../services/notification.service';
   styleUrl: './consola-codigo.component.scss'
 })
 export class ConsolaCodigoComponent {
+
+  formatearGhost(texto: string): SafeHtml {
+    const primerIndice = texto.indexOf('▯');
+    if (primerIndice === -1) return this.sanitizer.bypassSecurityTrustHtml(texto.replace(/ /g, '&nbsp;'));
+    
+    const antes = texto.substring(0, primerIndice).replace(/ /g, '&nbsp;');
+    const despues = texto.substring(primerIndice + 1).replace(/ /g, '&nbsp;');
+    
+    return this.sanitizer.bypassSecurityTrustHtml(antes + '<span class="parpadeo">▯</span>' + despues);
+  }
+
   private notificationService = inject(NotificationService);
+  private sanitizer = inject(DomSanitizer);
 
   @Input() lineas: Instruccion[] = [];
   @Input() ejecutando: boolean = false;

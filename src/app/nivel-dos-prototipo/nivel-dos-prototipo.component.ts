@@ -79,7 +79,11 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
     azul:    { boton: '#174bd4', consola: '#82B1FF' },
     verde:   { boton: '#288650', consola: '#A5D6A7' },
     dorado:  { boton: '#df4517', consola: '#FFAB91' },
-    violeta: { boton: '#8e1ba4', consola: '#CE93D8' }
+    violeta: { boton: '#8e1ba4', consola: '#CE93D8' },
+    rojo:    { boton: '#c62828', consola: '#ef9a9a' },
+    naranja: { boton: '#e65100', consola: '#ffcc80' },
+    cyan:    { boton: '#006064', consola: '#80deea' },
+    gris:    { boton: '#424242', consola: '#bdbdbd' }
   };
 
   inventarioNivel = {
@@ -123,25 +127,29 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
       let andamiaje: any[] = [];
       switch (this.pasoAndamiaje) {
         case 0:
-          andamiaje = [{ etiqueta: "Control temperatura", codigo: "si(taladro.temperatura ▯ ▯) {\n    ▯\n  }", tono: "dorado" }];
+          andamiaje = [{ titulo: "Estructura", etiqueta: "Control temperatura", codigo: "si(taladro.temperatura ▯ ▯) {\n    ▯\n  }", tono: "dorado" }];
           break;
         case 1:
-          andamiaje = [{ etiqueta: ">", codigo: ">", tono: "violeta" }, { etiqueta: "<", codigo: "<", tono: "violeta" }];
+          andamiaje = [
+            { titulo: "Mayor que", etiqueta: ">", codigo: ">", tono: "verde" },
+            { titulo: "Menor que", etiqueta: "<", codigo: "<", tono: "rojo" }
+          ];
           break;
         case 2:
-          andamiaje = [0, 50, 75, 100, 150].map(v => ({ etiqueta: v.toString(), codigo: v.toString(), tono: "azul" }));
+          const tonosArray = ['azul', 'naranja', 'violeta', 'cyan', 'dorado'];
+          andamiaje = [0, 50, 75, 100, 150].map((v, i) => ({ titulo: "Valor", etiqueta: v.toString(), codigo: v.toString(), tono: tonosArray[i % tonosArray.length] }));
           break;
         case 3:
           andamiaje = [
-            { etiqueta: "Liberar vapor", codigo: "taladro.liberarVapor();", tono: "verde" },
-            { etiqueta: "Apagar motor", codigo: "taladro.apagarMotor();", tono: "verde" },
-            { etiqueta: "Extraer carbón", codigo: "taladro.extraerCarbon();", tono: "verde" }
+            { titulo: "Acción", etiqueta: "Liberar vapor", codigo: "taladro.liberarVapor();", tono: "azul" },
+            { titulo: "Acción", etiqueta: "Apagar motor", codigo: "taladro.apagarMotor();", tono: "gris" },
+            { titulo: "Acción", etiqueta: "Extraer carbón", codigo: "taladro.extraerCarbon();", tono: "verde" }
           ];
           break;
       }
       return andamiaje.map(t => {
         const colores = this.tonoColores[t.tono] || this.tonoColores['azul'];
-        return { nombre: t.etiqueta, accion: t.codigo, colorBoton: colores.boton, colorConsola: colores.consola };
+        return { titulo: t.titulo, nombre: t.etiqueta, accion: t.codigo, colorBoton: colores.boton, colorConsola: colores.consola };
       });
     }
     return this.faseActual.tarjetas.map(t => {

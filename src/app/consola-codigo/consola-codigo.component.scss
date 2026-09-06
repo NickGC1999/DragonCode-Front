@@ -365,3 +365,25 @@
     font-size: 1.2rem;
   }
 }
+.ghost-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  white-space: pre;
+  display: flex;
+  align-items: center;
+}
+.ocultar-texto {
+  color: transparent !important;
+}
+.parpadeo {
+  animation: blink 1s step-end infinite;
+  color: #ffeb3b;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

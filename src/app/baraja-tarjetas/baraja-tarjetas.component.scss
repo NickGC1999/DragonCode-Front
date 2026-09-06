@@ -183,6 +183,8 @@
 .action-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  min-width: 60px;
   width: max-content;
   border: 2px solid #000;
   border-radius: 4px; /* Un redondeo mínimo, casi cuadrado */
@@ -219,6 +221,14 @@
   transform: translateY(5px);
   /* La sombra externa desaparece al estar presionado */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0px 0 #000;
+}
+
+.titulo-tarjeta {
+  font-family: 'TuFuentePixel', monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 2px;
+  text-transform: uppercase;
 }
 
 .card-title {

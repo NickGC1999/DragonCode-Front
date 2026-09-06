@@ -31,7 +31,16 @@
         
         <div class="code-line-wrapper" 
              [class.has-error]="linea.tieneError" 
-             [style.--char-count]="linea.texto.length">
+             [style.--char-count]="linea.texto.length"
+             style="position: relative; display: flex; flex-grow: 1;">
+             
+          <!-- Ghost Overlay para renderizar HTML (ej. parpadeo de ▯) -->
+          <div *ngIf="linea.texto.includes('▯')" 
+               class="ghost-overlay" 
+               [style.color]="linea.tieneError ? '#ffffff' : linea.color"
+               [innerHTML]="formatearGhost(linea.texto)">
+          </div>
+
           <input 
             #lineaInput
             type="text" 
@@ -39,6 +48,7 @@
             [class.is-executing]="ejecutando"
             [class.linea-fija]="linea.fija"
             [class.linea-placeholder]="linea.esPlaceholder"
+            [class.ocultar-texto]="linea.texto.includes('▯')"
             [style.color]="linea.tieneError ? '#ffffff' : linea.color"
             [ngModel]="linea.texto"
             (ngModelChange)="onTextoCambiado($index, $event, linea)"
