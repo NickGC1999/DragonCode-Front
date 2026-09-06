@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { GameHeaderComponent } from '../game-header/game-header.component';
+import { LayoutJuegoComponent } from '../layout-juego/layout-juego.component';
+import { TarjetaConfig } from '../baraja-tarjetas/baraja-tarjetas.component';
 import {
   BanderasEstrategiaTaladro,
   FaseTaladro
@@ -15,6 +16,7 @@ import {
 } from '../services/aulas.service';
 import { LoaderService } from '../services/loader.service';
 import { ProgresoService } from '../services/progreso.service';
+import nivel2Data from '../../assets/data/aventuraniveles/nivel-2.json';
 
 type TipoEventoTaladro = 'temperatura' | 'peso' | 'carbon';
 type EstadoTaladro =
@@ -26,18 +28,20 @@ type EstadoTaladro =
   | 'explosion'
   | 'banda-rota'
   | 'sin-combustible'
-  | 'estable';
+  | 'estable'
+  | 'ahogo'
+  | 'descompuesto';
 
 interface TarjetaTaladro {
   codigo: string;
   etiqueta: string;
-  tono: 'azul' | 'verde' | 'dorado' | 'violeta';
-  tipo: 'condicion' | 'accion';
+  tono: 'verde' | 'dorado' | 'azul' | 'violeta';
+  tipo: 'accion' | 'condicion';
   protocolo: TipoEventoTaladro;
 }
 
 interface FaseNivelDos {
-  numero: FaseTaladro;
+  numero: number;
   titulo: string;
   concepto: string;
   objetivo: string;
@@ -46,7 +50,7 @@ interface FaseNivelDos {
   tarjetas: TarjetaTaladro[];
 }
 
-interface ProtocoloAprendido {
+export interface ProtocoloAprendido {
   numero: number;
   nombre: string;
   condicion: string;
@@ -58,106 +62,35 @@ interface ProtocoloAprendido {
 @Component({
   selector: 'app-nivel-dos-prototipo',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent],
+  imports: [CommonModule, FormsModule, LayoutJuegoComponent],
   templateUrl: './nivel-dos-prototipo.component.html',
   styleUrl: './nivel-dos-prototipo.component.scss'
 })
 export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
-  readonly protocolosAprendidos: ProtocoloAprendido[] = [
-    {
-      numero: 1,
-      nombre: 'Temperatura',
-      condicion: 'Si supera 100°',
-      accion: 'Liberar vapor',
-      condicionCodigo: 'si(taladro.temperatura > 100)',
-      accionCodigo: 'taladro.liberarVapor();'
-    },
-    {
-      numero: 2,
-      nombre: 'Carga',
-      condicion: 'Si supera 50',
-      accion: 'Empacar cristales',
-      condicionCodigo: 'si(taladro.pesoCarga > 50)',
-      accionCodigo: 'taladro.empacarCristales();'
-    },
-    {
-      numero: 3,
-      nombre: 'Carbón',
-      condicion: 'Si llega a 0',
-      accion: 'Recargar carbón',
-      condicionCodigo: 'si(taladro.carbon == 0)',
-      accionCodigo: 'taladro.recargarCarbon();'
-    }
-  ];
+  readonly protocolosAprendidos: ProtocoloAprendido[] = nivel2Data.protocolosAprendidos as ProtocoloAprendido[];
+  fases: FaseNivelDos[] = nivel2Data.fases as unknown as FaseNivelDos[];
 
-  readonly fasesBase: FaseNivelDos[] = [
-    {
-      numero: 1,
-      titulo: 'Control de sobrecalentamiento',
-      concepto: 'Evento de temperatura',
-      objetivo: 'Programa al taladro para liberar vapor cuando su temperatura supere los 100°.',
-      pista: 'Inserta “Si supera 100°” y después coloca “Liberar vapor” dentro de sus llaves.',
-      evento: 'evento(taladro.sobrecalentamiento) {',
-      tarjetas: [
-        { codigo: 'taladro.apagarMotor();', etiqueta: 'Apagar motor', tono: 'verde', tipo: 'accion', protocolo: 'temperatura' },
-        { codigo: 'si(taladro.temperatura > 100) {\n}', etiqueta: 'Si supera 100°', tono: 'dorado', tipo: 'condicion', protocolo: 'temperatura' },
-        { codigo: 'si(taladro.temperatura < 100) {\n}', etiqueta: 'Si está frío', tono: 'violeta', tipo: 'condicion', protocolo: 'temperatura' },
-        { codigo: 'taladro.liberarVapor();', etiqueta: 'Liberar vapor', tono: 'azul', tipo: 'accion', protocolo: 'temperatura' }
-      ]
-    },
-    {
-      numero: 2,
-      titulo: 'Carga de cristales',
-      concepto: 'Evento de sobrecarga',
-      objetivo: 'Empaca los cristales cuando el peso acumulado supere 50 unidades.',
-      pista: 'Primero escucha si pesoCarga supera 50 y luego empaca los cristales dentro de la condición.',
-      evento: 'evento(taladro.sobrecarga) {',
-      tarjetas: [
-        { codigo: 'taladro.empacarCristales();', etiqueta: 'Empacar cristales', tono: 'violeta', tipo: 'accion', protocolo: 'peso' },
-        { codigo: 'si(taladro.pesoCarga < 50) {\n}', etiqueta: 'Si pesa poco', tono: 'verde', tipo: 'condicion', protocolo: 'peso' },
-        { codigo: 'si(taladro.pesoCarga > 50) {\n}', etiqueta: 'Si supera 50', tono: 'azul', tipo: 'condicion', protocolo: 'peso' },
-        { codigo: 'taladro.detenerBanda();', etiqueta: 'Detener banda', tono: 'dorado', tipo: 'accion', protocolo: 'peso' }
-      ]
-    },
-    {
-      numero: 3,
-      titulo: 'Reserva de carbón',
-      concepto: 'Evento de combustible',
-      objetivo: 'Recarga el carbón cuando el depósito llegue exactamente a 0.',
-      pista: 'Compara carbon con 0 usando == y coloca la recarga dentro de esa condición.',
-      evento: 'evento(taladro.tanqueVacio) {',
-      tarjetas: [
-        { codigo: 'taladro.apagarHorno();', etiqueta: 'Apagar horno', tono: 'azul', tipo: 'accion', protocolo: 'carbon' },
-        { codigo: 'taladro.recargarCarbon();', etiqueta: 'Recargar carbón', tono: 'dorado', tipo: 'accion', protocolo: 'carbon' },
-        { codigo: 'si(taladro.carbon > 0) {\n}', etiqueta: 'Si aún queda', tono: 'verde', tipo: 'condicion', protocolo: 'carbon' },
-        { codigo: 'si(taladro.carbon == 0) {\n}', etiqueta: 'Si carbón es 0', tono: 'violeta', tipo: 'condicion', protocolo: 'carbon' }
-      ]
-    },
-    {
-      numero: 4,
-      titulo: 'Turno automático completo',
-      concepto: 'Coordinación de eventos',
-      objetivo: 'Construye los tres protocolos en orden para mantener el taladro funcionando por sí solo.',
-      pista: 'Consulta la memoria de protocolos: temperatura, carga y carbón. Cada acción debe quedar dentro de su propia condición.',
-      evento: 'evento(taladro.operacionCompleta) {',
-      tarjetas: [
-        { codigo: 'taladro.recargarCarbon();', etiqueta: 'Recargar carbón', tono: 'verde', tipo: 'accion', protocolo: 'carbon' },
-        { codigo: 'si(taladro.pesoCarga > 50) {\n}', etiqueta: 'Peso > 50', tono: 'dorado', tipo: 'condicion', protocolo: 'peso' },
-        { codigo: 'taladro.apagarMotor();', etiqueta: 'Apagar motor', tono: 'violeta', tipo: 'accion', protocolo: 'temperatura' },
-        { codigo: 'si(taladro.temperatura > 100) {\n}', etiqueta: 'Temperatura > 100', tono: 'azul', tipo: 'condicion', protocolo: 'temperatura' },
-        { codigo: 'taladro.empacarCristales();', etiqueta: 'Empacar carga', tono: 'violeta', tipo: 'accion', protocolo: 'peso' },
-        { codigo: 'si(taladro.carbon == 0) {\n}', etiqueta: 'Carbón == 0', tono: 'azul', tipo: 'condicion', protocolo: 'carbon' },
-        { codigo: 'taladro.liberarVapor();', etiqueta: 'Liberar vapor', tono: 'verde', tipo: 'accion', protocolo: 'temperatura' },
-        { codigo: 'si(taladro.pesoCarga < 50) {\n}', etiqueta: 'Peso < 50', tono: 'dorado', tipo: 'condicion', protocolo: 'peso' }
-      ]
-    }
-  ];
+  @ViewChild(LayoutJuegoComponent) layoutJuego!: LayoutJuegoComponent;
+  pasoAndamiaje = 0;
+  antiCopiaActivo = false;
+  ayudaUsada = false;
 
-  fases: FaseNivelDos[] = [...this.fasesBase];
+  private readonly tonoColores: Record<string, { boton: string; consola: string }> = {
+    azul:    { boton: '#174bd4', consola: '#82B1FF' },
+    verde:   { boton: '#288650', consola: '#A5D6A7' },
+    dorado:  { boton: '#df4517', consola: '#FFAB91' },
+    violeta: { boton: '#8e1ba4', consola: '#CE93D8' }
+  };
+
+  inventarioNivel = {
+    libro: { activo: true },
+    clarividencia: { activo: false, consumida: false },
+    vida: { activo: true, consumida: false },
+    tiempo: { activo: false, consumida: false }
+  };
 
   faseActualIndice = 0;
   codigoUsuario = '';
-  vidas = 3;
   temperatura = 0;
   pesoCristales = 0;
   combustible = 100;
@@ -177,11 +110,111 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
   estrellas = 0;
   calificacion = 0;
   pestanaInventario: 'acciones' | 'objetos' = 'acciones';
-  antiCopiaActivo = false;
   cargandoContextoAula = false;
   guardandoProgreso = false;
   progresoGuardado = false;
   mensajeSincronizacion = '';
+  
+  falloFase1AndamiajeConfig = { operador: '', valor: 0, accion: '', tipoFallo: '' };
+  get ejecutandoComandos(): boolean { return this.ejecutando; }
+
+  get configTarjetasTaladro(): TarjetaConfig[] {
+    if (this.faseActual.numero === 1) {
+      let andamiaje: any[] = [];
+      switch (this.pasoAndamiaje) {
+        case 0:
+          andamiaje = [{ etiqueta: "Control temperatura", codigo: "si(taladro.temperatura ▯ ▯) {\n    ▯\n  }", tono: "dorado" }];
+          break;
+        case 1:
+          andamiaje = [{ etiqueta: ">", codigo: ">", tono: "violeta" }, { etiqueta: "<", codigo: "<", tono: "violeta" }];
+          break;
+        case 2:
+          andamiaje = [0, 50, 75, 100, 150].map(v => ({ etiqueta: v.toString(), codigo: v.toString(), tono: "azul" }));
+          break;
+        case 3:
+          andamiaje = [
+            { etiqueta: "Liberar vapor", codigo: "taladro.liberarVapor();", tono: "verde" },
+            { etiqueta: "Apagar motor", codigo: "taladro.apagarMotor();", tono: "verde" },
+            { etiqueta: "Extraer carbón", codigo: "taladro.extraerCarbon();", tono: "verde" }
+          ];
+          break;
+      }
+      return andamiaje.map(t => {
+        const colores = this.tonoColores[t.tono] || this.tonoColores['azul'];
+        return { nombre: t.etiqueta, accion: t.codigo, colorBoton: colores.boton, colorConsola: colores.consola };
+      });
+    }
+    return this.faseActual.tarjetas.map(t => {
+      const colores = this.tonoColores[(t as any).tono] || this.tonoColores['azul'];
+      return { nombre: (t as any).etiqueta, accion: (t as any).codigo, colorBoton: colores.boton, colorConsola: colores.consola };
+    });
+  }
+
+  manejarToggleDraco(estado: boolean) { this.ayudaVisible = estado; }
+  manejarUsoPocion(pocion: string) { if (pocion === 'libro') this.ayudaVisible = !this.ayudaVisible; }
+  registrarAyudaUsada() { this.ayudaUsada = true; }
+
+  manejarUsoTarjeta(tarjeta: TarjetaConfig): void {
+    if (this.faseActual.numero !== 1) { this.ayudaUsada = true; return; }
+    if (this.pasoAndamiaje === 0) {
+      const lineas = this.layoutJuego.lineasCodigo;
+      const idx = lineas.findIndex(l => l.esPlaceholder);
+      if (idx !== -1) {
+        const nuevasLineas = tarjeta.accion.split('\n').map(l => ({ texto: '    ' + l, color: '#DCDCAA', tieneError: false }));
+        lineas.splice(idx, 1, ...nuevasLineas);
+      }
+      this.pasoAndamiaje++;
+    } else if (this.pasoAndamiaje >= 1 && this.pasoAndamiaje <= 3) {
+      const lineas = this.layoutJuego.lineasCodigo;
+      for (let i = 0; i < lineas.length; i++) {
+        if (lineas[i].texto.includes('▯')) {
+           lineas[i].texto = lineas[i].texto.replace('▯', tarjeta.accion);
+           if (this.pasoAndamiaje === 3 && tarjeta.accion.includes('taladro.')) lineas[i].color = '#569CD6';
+           break;
+        }
+      }
+      this.pasoAndamiaje++;
+    }
+  }
+
+  ngAfterViewInit(): void { setTimeout(() => this.inicializarConsolaTexto(), 0); }
+
+  private inicializarConsolaTexto(): void {
+    if (this.layoutJuego) {
+      this.layoutJuego.lineasCodigo = [
+        { texto: this.faseActual.evento, color: '#C586C0', tieneError: false, fija: true },
+        { texto: '    // Inserta tu código aquí', color: '#6b7280', tieneError: false, esPlaceholder: true },
+        { texto: '}', color: '#C586C0', tieneError: false, fija: true }
+      ];
+      if (this.layoutJuego.consola) {
+        this.layoutJuego.consola.lineas = this.layoutJuego.lineasCodigo;
+        this.layoutJuego.consola.lineaActivaIndex = 1;
+      }
+    }
+    if (this.faseActual.numero === 1) this.pasoAndamiaje = 0;
+  }
+
+  restaurarPlantilla(): void {
+    if (this.ejecutando || this.faseCompletada || this.falloFase) return;
+    this.inicializarConsolaTexto();
+    this.errores = [];
+  }
+
+  borrarUltimaLineaPlantilla(): void {
+    if (this.ejecutando || this.faseCompletada || this.falloFase || !this.layoutJuego) return;
+    if (this.faseActual.numero === 1) { this.inicializarConsolaTexto(); return; }
+
+    const lineas = this.layoutJuego.lineasCodigo;
+    const idxLibre = lineas.map((l, i) => ({l, i})).reverse().find(x => !x.l.fija && !x.l.esPlaceholder)?.i;
+    if (idxLibre !== undefined) {
+      lineas.splice(idxLibre, 1);
+      if (!lineas.some(l => !l.fija && !l.esPlaceholder)) {
+         const indexCierre = lineas.findIndex(l => l.texto.trim() === '}' && l.fija);
+         lineas.splice(indexCierre !== -1 ? indexCierre : lineas.length, 0, { texto: '    // Inserta tu código aquí', color: '#6b7280', tieneError: false, esPlaceholder: true });
+      }
+    }
+    this.errores = [];
+  }
 
   estrategias: BanderasEstrategiaTaladro = this.banderasVacias();
   eventosResueltos: Record<TipoEventoTaladro, boolean> = {
@@ -258,7 +291,9 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
       explosion: 'SOBRECARGA CRÍTICA',
       'banda-rota': 'BANDA TRANSPORTADORA ROTA',
       'sin-combustible': 'HORNO APAGADO',
-      estable: 'SISTEMA ESTABLE'
+      estable: 'SISTEMA ESTABLE',
+ahogo: 'MOTOR AHOGADO',
+descompuesto: 'ENGRANAJES ROTOS'
     }[this.estadoTaladro];
   }
 
@@ -283,52 +318,10 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
     return 'EL TALADRO EXPLOTÓ';
   }
 
-  insertarTarjeta(tarjeta: TarjetaTaladro): void {
+  ejecutarNivel(codigoDesdeConsola: string): void {
     if (this.ejecutando || this.faseCompletada || this.falloFase || this.gameOver) return;
 
-    if (tarjeta.tipo === 'condicion') {
-      if (this.faseActual.numero === 4 && this.codigoUsuario.trim()) {
-        this.codigoUsuario = `${this.codigoUsuario.trimEnd()}\n${tarjeta.codigo}`;
-      } else {
-        this.codigoUsuario = tarjeta.codigo;
-      }
-    } else if (/si\s*\(/.test(this.codigoUsuario) && this.codigoUsuario.trimEnd().endsWith('}')) {
-      const cierre = this.codigoUsuario.lastIndexOf('}');
-      this.codigoUsuario = `${this.codigoUsuario.slice(0, cierre).trimEnd()}\n  ${tarjeta.codigo}\n}`;
-    } else {
-      this.codigoUsuario = this.codigoUsuario.trim()
-        ? `${this.codigoUsuario.trimEnd()}\n${tarjeta.codigo}`
-        : tarjeta.codigo;
-    }
-
-    this.errores = [];
-  }
-
-  protocoloInsertado(protocolo: ProtocoloAprendido): boolean {
-    return this.codigoUsuario.includes(protocolo.condicionCodigo)
-      && this.codigoUsuario.includes(protocolo.accionCodigo);
-  }
-
-  numeroProtocolo(tipo: TipoEventoTaladro): number {
-    return { temperatura: 1, peso: 2, carbon: 3 }[tipo];
-  }
-
-  limpiarPergamino(): void {
-    if (this.ejecutando || this.faseCompletada || this.falloFase) return;
-    this.codigoUsuario = '';
-    this.errores = [];
-  }
-
-  borrarLinea(): void {
-    if (this.ejecutando || this.faseCompletada || this.falloFase) return;
-    const lineas = this.codigoUsuario.split('\n');
-    lineas.pop();
-    this.codigoUsuario = lineas.join('\n');
-    this.errores = [];
-  }
-
-  ejecutarCodigo(): void {
-    if (this.ejecutando || this.faseCompletada || this.falloFase || this.gameOver) return;
+    this.codigoUsuario = codigoDesdeConsola;
 
     this.iniciarTemporizador();
     this.detenerGameLoop();
@@ -339,9 +332,21 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
     this.estadoTaladro = 'perforando';
     this.bitacora = `Fase ${this.faseActual.numero}: los sensores comenzaron a enviar datos...`;
 
-    const resultado = this.motor.evaluarTaladro(this.codigoCompleto, this.faseActual.numero);
-    this.estrategias = resultado.banderas;
-    this.erroresPendientes = resultado.errores.map(error => error.mensaje);
+    this.falloFase1AndamiajeConfig = { operador: '', valor: 0, accion: '', tipoFallo: '' };
+
+    if (this.faseActual.numero === 1) {
+      const res = this.motor.evaluarAndamiajeFase1(codigoDesdeConsola);
+      if (res.valido) {
+        this.estrategias.estrategiaVaporCorrecta = true;
+      } else {
+        this.estrategias.estrategiaVaporCorrecta = false;
+        this.falloFase1AndamiajeConfig = res;
+      }
+    } else {
+      const resultado = this.motor.evaluarTaladro(codigoDesdeConsola, this.faseActual.numero as FaseTaladro);
+      this.estrategias = resultado.banderas;
+      this.erroresPendientes = resultado.errores.map(error => error.mensaje);
+    }
 
     this.gameLoop = setInterval(() => this.actualizarSimulacion(), 240);
   }
@@ -362,7 +367,6 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
     this.detenerTemporizador();
     this.detenerGameLoop();
     this.faseActualIndice = 0;
-    this.vidas = 3;
     this.intentosEjecucion = 0;
     this.erroresAcumulados = 0;
     this.tiempoSegundos = 0;
@@ -401,8 +405,25 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
       this.combustible = Math.max(0, this.combustible - 10);
     }
 
-    if (fase === 1 && this.temperatura > 100) {
-      this.resolverEvento('temperatura');
+    if (fase === 1) {
+      if (this.estrategias.estrategiaVaporCorrecta) {
+        if (this.temperatura > 100) this.resolverEvento('temperatura');
+        return;
+      }
+
+      const conf = this.falloFase1AndamiajeConfig;
+      let condicionCumplida = false;
+      if (conf.operador === '>') condicionCumplida = this.temperatura > conf.valor;
+      if (conf.operador === '<') condicionCumplida = this.temperatura < conf.valor;
+
+      if (condicionCumplida && conf.tipoFallo) {
+        this.fallarFase1Andamiaje(conf.tipoFallo);
+        return;
+      }
+
+      if (this.temperatura > 100) {
+        this.fallarFase1Andamiaje('SOBRECALENTAMIENTO');
+      }
       return;
     }
 
@@ -490,11 +511,32 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
     this.avanzarFase();
   }
 
+  fallarFase1Andamiaje(tipoFallo: string): void {
+    this.detenerGameLoop();
+    this.ejecutando = false;
+    this.falloFase = true;
+    this.erroresAcumulados++;
+    this.errores = ['Configuración incorrecta del andamiaje.'];
+
+    if (tipoFallo === 'AHOGO') {
+      this.estadoTaladro = 'ahogo' as any;
+      this.bitacora = 'El motor se ahogó por liberar vapor antes de tiempo.';
+    } else if (tipoFallo === 'SOBRECALENTAMIENTO') {
+      this.estadoTaladro = 'explosion';
+      this.bitacora = 'El taladro se sobrecalentó.';
+    } else if (tipoFallo === 'DESCOMPUESTO') {
+      this.estadoTaladro = 'descompuesto' as any;
+      this.bitacora = 'Apagar el motor de golpe dañó los engranajes.';
+    } else {
+      this.estadoTaladro = 'explosion';
+      this.bitacora = 'El taladro explotó por configuración incorrecta.';
+    }
+  }
+
   private fallarFase(tipo: TipoEventoTaladro): void {
     this.detenerGameLoop();
     this.ejecutando = false;
     this.falloFase = true;
-    this.vidas--;
     this.erroresAcumulados++;
     this.errores = this.erroresPendientes.length > 0
       ? this.erroresPendientes
@@ -513,9 +555,9 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
       this.bitacora = 'El carbón se agotó y el fuego del taladro se apagó.';
     }
 
-    if (this.vidas <= 0) {
+    if (false) {
       this.gameOver = true;
-      this.detenerTemporizador();
+      this.bitacora = 'La máquina sufrió daños irreparables. Reinicia la misión.';
     }
   }
 
@@ -616,7 +658,8 @@ export class NivelDosPrototipoComponent implements OnInit, OnDestroy {
 
     if (fasesSeleccionadas?.length) {
       const seleccion = new Set(fasesSeleccionadas);
-      this.fases = this.fasesBase.filter(fase => seleccion.has(fase.numero));
+      const rawFases = nivel2Data.fases as unknown as FaseNivelDos[];
+      this.fases = rawFases.filter(fase => seleccion.has(fase.numero));
     }
   }
 

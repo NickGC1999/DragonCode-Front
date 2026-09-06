@@ -37,10 +37,13 @@
             type="text" 
             class="line-input"
             [class.is-executing]="ejecutando"
+            [class.linea-fija]="linea.fija"
+            [class.linea-placeholder]="linea.esPlaceholder"
             [style.color]="linea.tieneError ? '#ffffff' : linea.color"
             [ngModel]="linea.texto"
             (ngModelChange)="onTextoCambiado($index, $event, linea)"
-            (focus)="lineaActivaIndex = $index"
+            (focus)="lineaActivaIndex = $index; onLineaFocus(linea)"
+            (blur)="onLineaBlur(linea)"
             (keydown)="onKeyDown($event, $index, linea)"
             (keydown.enter)="crearNuevaLinea($index)"
             (keydown.arrowUp)="moverFoco($index - 1, $event)"
@@ -49,6 +52,7 @@
             (contextmenu)="preventPaste($event)"
             spellcheck="false"
             autocomplete="off"
+            [readonly]="linea.fija"
             [disabled]="ejecutando">
         </div>
       </div>

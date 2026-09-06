@@ -27,4 +27,8 @@ export class MotorEjecucionService {
   evaluarTaladro(codigo: string, fase: FaseTaladro = 1): ResultadoEvaluacionTaladro {
     return this.evaluadorTaladro.evaluar(codigo, fase);
   }
+
+  evaluarAndamiajeFase1(codigo: string): { valido: boolean, tipoFallo: string, operador: string, valor: number, accion: string } {
+    return this.evaluadorTaladro.evaluarAndamiajeFase1(codigo);
+  }
 }

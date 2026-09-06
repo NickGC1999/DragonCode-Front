@@ -18,6 +18,8 @@ export class ConsolaCodigoComponent {
   @Input() ejecutando: boolean = false;
   @Input() antiCopiaActivo: boolean = false;
   
+  @Input() modoPlantilla: boolean = false;
+
   @Output() lineaBorrada = new EventEmitter<number>();
   @Output() onEjecutar = new EventEmitter<void>();
   @Output() onBorrarLinea = new EventEmitter<void>();
@@ -113,6 +115,19 @@ export class ConsolaCodigoComponent {
   pocionTimeout: any;
   fadeTimeout: any;
 
+  // === FOCUS / BLUR PARA PLACEHOLDERS ===
+  onLineaFocus(linea: Instruccion): void {
+    if (this.modoPlantilla && linea.esPlaceholder && linea.texto.includes('// Inserta tu código aquí')) {
+      linea.texto = '';
+    }
+  }
+
+  onLineaBlur(linea: Instruccion): void {
+    if (this.modoPlantilla && linea.esPlaceholder && linea.texto.trim() === '') {
+      linea.texto = '    // Inserta tu código aquí';
+    }
+  }
+
   usarPocionClarividencia() {
     this.pocionActiva = true;
     this.detonarDestello();
@@ -144,17 +159,39 @@ export class ConsolaCodigoComponent {
 
   // Insertar código directamente desde las tarjetas, contextualmente en la línea activa
   insertarDesdeTarjeta(tarjeta: { nombre: string; colorBoton: string; colorConsola: string; accion: string }) {
-    // Protección contra índices desfasados (ej. si el nivel se purga y el arreglo se reduce a 1)
+    if (this.modoPlantilla) {
+      // Si hay un placeholder visible, lo reemplazamos
+      const placeholderIdx = this.lineas.findIndex(l => l.esPlaceholder && (l.texto.trim() === '' || l.texto.includes('// Inserta tu código aquí')));
+      if (placeholderIdx !== -1) {
+        this.lineas[placeholderIdx] = { texto: '    ' + tarjeta.accion, color: tarjeta.colorConsola, tieneError: false };
+        this.lineaActivaIndex = placeholderIdx;
+      } else {
+        // Buscar el último '}' fijo o insertamos al final
+        const indexCierre = this.lineas.findIndex(l => l.texto.trim() === '}' && l.fija);
+        const insertIdx = indexCierre !== -1 ? indexCierre : this.lineas.length;
+        this.lineas.splice(insertIdx, 0, { texto: '    ' + tarjeta.accion, color: tarjeta.colorConsola, tieneError: false });
+        this.lineaActivaIndex = insertIdx;
+      }
+      return;
+    }
+
+    // Comportamiento por defecto (Libre Nivel 1)
     if (this.lineaActivaIndex >= this.lineas.length || this.lineaActivaIndex < 0) {
       this.lineaActivaIndex = Math.max(0, this.lineas.length - 1);
     }
 
-    if (this.lineas[this.lineaActivaIndex] && this.lineas[this.lineaActivaIndex].texto === '') {
-      this.lineas[this.lineaActivaIndex] = { texto: tarjeta.accion, color: tarjeta.colorConsola, tieneError: false };
-    } else {
-      this.lineas.splice(this.lineaActivaIndex + 1, 0, { texto: tarjeta.accion, color: tarjeta.colorConsola, tieneError: false });
-      this.lineaActivaIndex++;
+    if (this.lineas[this.lineaActivaIndex]) {
+      const textoActivo = this.lineas[this.lineaActivaIndex].texto.trim();
+      if (textoActivo === '' || textoActivo.startsWith('//')) {
+        // Reemplaza si la línea está vacía o es un comentario (ej. Nivel 2 pre-fill)
+        this.lineas[this.lineaActivaIndex] = { texto: '  ' + tarjeta.accion, color: tarjeta.colorConsola, tieneError: false };
+        return;
+      }
     }
+
+    // Si la línea actual tiene código válido, inserta debajo
+    this.lineas.splice(this.lineaActivaIndex + 1, 0, { texto: '  ' + tarjeta.accion, color: tarjeta.colorConsola, tieneError: false });
+    this.lineaActivaIndex++;
     // NOTA: Se ha eliminado el .focus() programático para evitar que el teclado móvil salte inoportunamente
   }
 

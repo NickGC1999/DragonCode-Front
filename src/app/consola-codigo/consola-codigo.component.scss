@@ -108,6 +108,17 @@
   gap: 12px;
 }
 
+.line-input.linea-fija {
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.line-input.linea-placeholder {
+  color: #6b7280 !important;
+  font-style: italic;
+}
+
 .btn-tool {
   background: transparent;
   border: 2px solid transparent;
