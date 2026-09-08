@@ -30,8 +30,10 @@ export class LayoutJuegoComponent {
 
   // Extensión para Modo Plantilla
   @Input() modoPlantilla: boolean = false;
+  @Input() listoParaEjecutar: boolean = false;
   @Output() onLimpiarPlantilla = new EventEmitter<void>();
   @Output() onBorrarLineaPlantilla = new EventEmitter<void>();
+  @Output() onDeshacerPaso = new EventEmitter<string>();
 
   // Servicio de Notificaciones
   private notificationService = inject(NotificationService);

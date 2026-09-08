@@ -13,19 +13,19 @@
     },
     {
       "numero": 2,
-      "nombre": "Carga",
-      "condicion": "Si supera 50",
-      "accion": "Empacar cristales",
-      "condicionCodigo": "si(taladro.pesoCarga > 50)",
-      "accionCodigo": "taladro.empacarCristales();"
+      "nombre": "Presion",
+      "condicion": "Si es exactamente 50",
+      "accion": "Mantener fuerza",
+      "condicionCodigo": "si(taladro.presion == 50)",
+      "accionCodigo": "taladro.mantenerFuerza();"
     },
     {
       "numero": 3,
-      "nombre": "Carbón",
-      "condicion": "Si llega a 0",
-      "accion": "Recargar carbón",
-      "condicionCodigo": "si(taladro.carbon == 0)",
-      "accionCodigo": "taladro.recargarCarbon();"
+      "nombre": "Extracción de Agua",
+      "condicion": "Si profundidad llega a 500",
+      "accion": "Extraer agua es verdadero",
+      "condicionCodigo": "si(taladro.profundidad == 500)",
+      "accionCodigo": "taladro.extraerAgua = true;"
     }
   ],
   "fases": [
@@ -69,37 +69,23 @@
     },
     {
       "numero": 2,
-      "titulo": "Carga de cristales",
-      "concepto": "Evento de sobrecarga",
-      "objetivo": "Empaca los cristales cuando el peso acumulado supere 50 unidades.",
-      "pista": "Primero escucha si pesoCarga supera 50 y luego empaca los cristales dentro de la condición.",
-      "evento": "evento(taladro.sobrecarga) {",
+      "titulo": "Presion constante",
+      "concepto": "Igualdad estricta",
+      "objetivo": "Manten la presion exactamente en 50 para no desestabilizar la maquina.",
+      "pista": "Compara la presion con 50 usando == y ejecuta mantenerFuerza dentro de esa condicion.",
+      "evento": "evento(taladro.estabilizarPresion) {",
       "tarjetas": [
         {
-          "codigo": "taladro.empacarCristales();",
-          "etiqueta": "Empacar cristales",
-          "tono": "violeta",
+          "codigo": "taladro.mantenerFuerza();",
+          "etiqueta": "Mantener fuerza",
+          "tono": "azul",
           "tipo": "accion",
           "protocolo": "peso"
         },
         {
-          "codigo": "si(taladro.pesoCarga < 50) {\n}",
-          "etiqueta": "Si pesa poco",
-          "tono": "verde",
-          "tipo": "condicion",
-          "protocolo": "peso"
-        },
-        {
-          "codigo": "si(taladro.pesoCarga > 50) {\n}",
-          "etiqueta": "Si supera 50",
-          "tono": "azul",
-          "tipo": "condicion",
-          "protocolo": "peso"
-        },
-        {
-          "codigo": "taladro.detenerBanda();",
-          "etiqueta": "Detener banda",
-          "tono": "dorado",
+          "codigo": "taladro.apagarMotor();",
+          "etiqueta": "Apagar motor",
+          "tono": "gris",
           "tipo": "accion",
           "protocolo": "peso"
         }
@@ -107,107 +93,12 @@
     },
     {
       "numero": 3,
-      "titulo": "Reserva de carbón",
-      "concepto": "Evento de combustible",
-      "objetivo": "Recarga el carbón cuando el depósito llegue exactamente a 0.",
-      "pista": "Compara carbon con 0 usando == y coloca la recarga dentro de esa condición.",
-      "evento": "evento(taladro.tanqueVacio) {",
-      "tarjetas": [
-        {
-          "codigo": "taladro.apagarHorno();",
-          "etiqueta": "Apagar horno",
-          "tono": "azul",
-          "tipo": "accion",
-          "protocolo": "carbon"
-        },
-        {
-          "codigo": "taladro.recargarCarbon();",
-          "etiqueta": "Recargar carbón",
-          "tono": "dorado",
-          "tipo": "accion",
-          "protocolo": "carbon"
-        },
-        {
-          "codigo": "si(taladro.carbon > 0) {\n}",
-          "etiqueta": "Si aún queda",
-          "tono": "verde",
-          "tipo": "condicion",
-          "protocolo": "carbon"
-        },
-        {
-          "codigo": "si(taladro.carbon == 0) {\n}",
-          "etiqueta": "Si carbón es 0",
-          "tono": "violeta",
-          "tipo": "condicion",
-          "protocolo": "carbon"
-        }
-      ]
-    },
-    {
-      "numero": 4,
-      "titulo": "Turno automático completo",
-      "concepto": "Coordinación de eventos",
-      "objetivo": "Construye los tres protocolos en orden para mantener el taladro funcionando por sí solo.",
-      "pista": "Consulta la memoria de protocolos: temperatura, carga y carbón. Cada acción debe quedar dentro de su propia condición.",
-      "evento": "evento(taladro.operacionCompleta) {",
-      "tarjetas": [
-        {
-          "codigo": "taladro.recargarCarbon();",
-          "etiqueta": "Recargar carbón",
-          "tono": "verde",
-          "tipo": "accion",
-          "protocolo": "carbon"
-        },
-        {
-          "codigo": "si(taladro.pesoCarga > 50) {\n}",
-          "etiqueta": "Peso > 50",
-          "tono": "dorado",
-          "tipo": "condicion",
-          "protocolo": "peso"
-        },
-        {
-          "codigo": "taladro.apagarMotor();",
-          "etiqueta": "Apagar motor",
-          "tono": "violeta",
-          "tipo": "accion",
-          "protocolo": "temperatura"
-        },
-        {
-          "codigo": "si(taladro.temperatura > 100) {\n}",
-          "etiqueta": "Temperatura > 100",
-          "tono": "azul",
-          "tipo": "condicion",
-          "protocolo": "temperatura"
-        },
-        {
-          "codigo": "taladro.empacarCristales();",
-          "etiqueta": "Empacar carga",
-          "tono": "violeta",
-          "tipo": "accion",
-          "protocolo": "peso"
-        },
-        {
-          "codigo": "si(taladro.carbon == 0) {\n}",
-          "etiqueta": "Carbón == 0",
-          "tono": "azul",
-          "tipo": "condicion",
-          "protocolo": "carbon"
-        },
-        {
-          "codigo": "taladro.liberarVapor();",
-          "etiqueta": "Liberar vapor",
-          "tono": "verde",
-          "tipo": "accion",
-          "protocolo": "temperatura"
-        },
-        {
-          "codigo": "si(taladro.pesoCarga < 50) {\n}",
-          "etiqueta": "Peso < 50",
-          "tono": "dorado",
-          "tipo": "condicion",
-          "protocolo": "peso"
-        }
-      ]
+      "titulo": "Extracción Subterránea",
+      "concepto": "Booleanos y Profundidad",
+      "objetivo": "Activa la extracción de agua cuando el taladro alcance la profundidad correcta.",
+      "pista": "Usa la condición para detectar la meta, y asigna 'true' a extraerAgua.",
+      "evento": "evento(taladro.recolectarAgua) {",
+      "tarjetas": []
     }
   ]
 }

@@ -3,35 +3,96 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Instruccion } from '../layout-juego/layout-juego.component';
 import { NotificationService } from '../services/notification.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SafeHtmlPipe } from '../shared/safe-html.pipe';
 
 @Component({
   selector: 'app-consola-codigo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SafeHtmlPipe],
   templateUrl: './consola-codigo.component.html',
   styleUrl: './consola-codigo.component.scss'
 })
 export class ConsolaCodigoComponent {
 
-  formatearGhost(texto: string): SafeHtml {
-    const primerIndice = texto.indexOf('▯');
-    if (primerIndice === -1) return this.sanitizer.bypassSecurityTrustHtml(texto.replace(/ /g, '&nbsp;'));
+  @Output() onDeshacerPaso = new EventEmitter<string>();
+  
+  historialPlantilla: string[] = [];
+
+  guardarEstadoPlantilla(estadoActual: string): void {
+    this.historialPlantilla.push(estadoActual);
+  }
+
+  deshacerPasoAndamiaje(event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.historialPlantilla.length > 0) {
+      const estadoAnterior = this.historialPlantilla.pop();
+      if (estadoAnterior !== undefined) {
+        this.onDeshacerPaso.emit(estadoAnterior);
+      }
+    }
+  }
+
+  public parsearSintaxis(texto: string, lineaIndex: number): string {
+    if (!texto) return '';
+
+    if (!this.modoPlantilla) {
+      return texto;
+    }
+
+    let html = texto;
+
+    // 1. Escapar símbolos HTML que rompen el DOM
+    html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // 2. Comentarios (Gris itálica)
+    html = html.replace(/(\/\/.*)/g, '<span style="color: #5c6370; font-style: italic;">$1</span>');
+
+    // 3. Palabras clave (Magenta)
+    html = html.replace(/\b(evento|si)\b/g, '<span style="color: #c678dd;">$1</span>');
+
+    // 4. Objeto principal (Rojo/Naranja)
+    html = html.replace(/\b(taladro)\b/g, '<span style="color: #e06c75;">$1</span>');
+
+    // 5. Métodos/Funciones (Azul claro)
+    html = html.replace(/\.(sobrecalentamiento|liberarVapor|apagarMotor|extraerCarbon|estabilizarPresion|mantenerFuerza|aumentarFuerza|recolectarAgua|detenerse|lanzarGasolina)/g, '.<span style="color: #61afef;">$1</span>');
+
+    // 6. Propiedades (Celeste)
+    html = html.replace(/\.(temperatura|pesoCarga|carbon|presion|profundidad|extraerAgua)/g, '.<span style="color: #56b6c2;">$1</span>');
+
+    // 7. Números (Dorado)
+    html = html.replace(/\b([0-9]+)\b/g, '<span style="color: #e5c07b;">$1</span>');
+
+    // 7.5. Booleanos (Naranja/Dorado distintivo)
+    html = html.replace(/\b(true|false)\b/g, '<span style="color: #d19a66; font-weight: bold;">$1</span>');
+
+    // 8. Operadores (Cian)
+    html = html.replace(/(&lt;|&gt;|==|!=)/g, '<span style="color: #56b6c2;">$1</span>');
+
+    // 9. Lógica Dinámica de Placeholders (▯)
+    const hayPlaceholderAntes = this.lineas.slice(0, lineaIndex).some(l => l.texto.includes('▯'));
+    let primerEncontrado = hayPlaceholderAntes;
     
-    const antes = texto.substring(0, primerIndice).replace(/ /g, '&nbsp;');
-    const despues = texto.substring(primerIndice + 1).replace(/ /g, '&nbsp;');
-    
-    return this.sanitizer.bypassSecurityTrustHtml(antes + '<span class="parpadeo">▯</span>' + despues);
+    html = html.replace(/▯/g, () => {
+      if (!primerEncontrado) {
+        primerEncontrado = true;
+        // Añadimos la clase 'placeholder-parpadeo' junto con los estilos en línea
+        return '<span class="placeholder-parpadeo" style="color: white; font-weight: bold;">▯</span>'; 
+      }
+      // Resto de placeholders: Gris oscuro
+      return '<span style="color: #5c6370;">▯</span>';
+    });
+
+    return html;
   }
 
   private notificationService = inject(NotificationService);
-  private sanitizer = inject(DomSanitizer);
 
   @Input() lineas: Instruccion[] = [];
   @Input() ejecutando: boolean = false;
   @Input() antiCopiaActivo: boolean = false;
   
   @Input() modoPlantilla: boolean = false;
+  @Input() listoParaEjecutar: boolean = false;
 
   @Output() lineaBorrada = new EventEmitter<number>();
   @Output() onEjecutar = new EventEmitter<void>();

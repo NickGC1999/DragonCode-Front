@@ -16,9 +16,11 @@
         [antiCopiaActivo]="antiCopiaActivo"
         [nivelActual]="nivelActual"
         [modoPlantilla]="modoPlantilla"
+        [listoParaEjecutar]="listoParaEjecutar"
         (lineaBorrada)="eliminarLinea($event)"
         (onEjecutar)="ejecutarCodigo()"
         (onBorrarLinea)="borrarUltimaLinea()"
+        (onDeshacerPaso)="onDeshacerPaso.emit($event)"
         (onLimpiar)="limpiarTodo()">
       </app-consola-codigo>
 

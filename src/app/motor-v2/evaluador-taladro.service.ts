@@ -9,7 +9,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class EvaluadorTaladroService {
   private readonly estrategiaTemperaturaRegex = /si\s*\(\s*taladro\.temperatura\s*>\s*100\s*\)\s*\{\s*taladro\.liberarVapor\(\);?\s*\}/i;
-  private readonly estrategiaPesoRegex = /si\s*\(\s*taladro\.pesoCarga\s*>\s*50\s*\)\s*\{\s*taladro\.empacarCristales\(\);?\s*\}/i;
+  private readonly estrategiaPesoRegex = /si\s*\(\s*taladro\.presion\s*==\s*50\s*\)\s*\{\s*taladro\.mantenerFuerza\(\);?\s*\}/i;
   private readonly estrategiaCarbonRegex = /si\s*\(\s*taladro\.carbon\s*==\s*0\s*\)\s*\{\s*taladro\.recargarCarbon\(\);?\s*\}/i;
 
   evaluarAndamiajeFase1(codigo: string): { valido: boolean, tipoFallo: string, operador: string, valor: number, accion: string } {
@@ -41,12 +41,86 @@ export class EvaluadorTaladroService {
     return { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', ...baseRes };
   }
 
+  evaluarAndamiajeFase2(codigo: string): { valido: boolean, tipoFallo: string, operador: string, valor: number, accion: string } {
+    const defaultRes = { valido: false, tipoFallo: 'DESESTABILIZACION', operador: '', valor: 0, accion: '' };
+    const andamiajeRegex = /si\s*\(\s*taladro\.presion\s*(==|!=)\s*(\d+)\s*\)\s*\{\s*taladro\.(mantenerFuerza|apagarMotor)\(\);?\s*\}/i;
+    const match = codigo.match(andamiajeRegex);
+
+    if (!match) return defaultRes;
+
+    const operador = match[1];
+    const valor = parseInt(match[2], 10);
+    const accion = match[3];
+
+    const baseRes = { operador, valor, accion };
+
+    if (operador === '==' && valor === 50 && accion === 'mantenerFuerza') {
+      return { valido: true, tipoFallo: '', ...baseRes };
+    }
+
+    if (accion === 'apagarMotor') {
+      return { valido: false, tipoFallo: 'DESCOMPUESTO', ...baseRes };
+    }
+
+    if (accion === 'aumentarFuerza') {
+      return { valido: false, tipoFallo: 'SOBRECALENTAMIENTO', ...baseRes };
+    }
+
+    if (accion === 'liberarVapor') {
+      return { valido: false, tipoFallo: 'AHOGO', ...baseRes };
+    }
+
+    return { valido: false, tipoFallo: 'DESESTABILIZACION', ...baseRes };
+  }
+  evaluarAndamiajeFase3(codigo: string): { valido: boolean, tipoFallo: string, operador: string, valor: number, accion: string, booleano: boolean } {
+    const defaultRes = { valido: false, tipoFallo: 'SINTAXIS', operador: '', valor: 0, accion: '', booleano: false };
+    const andamiajeRegex = /si\s*\(\s*taladro\.profundidad\s*(==|>|<)\s*(\d+)\s*\)\s*\{\s*taladro\.(detenerse|apagarMotor|lanzarGasolina)\(\);?\s*taladro\.extraerAgua\s*=\s*(true|false);?\s*\}/i;
+    const match = codigo.match(andamiajeRegex);
+
+    if (!match) return defaultRes;
+
+    const operador = match[1];
+    const valor = parseInt(match[2], 10);
+    const accion = match[3];
+    const booleano = match[4].toLowerCase() === 'true';
+
+    const baseRes = { operador, valor, accion, booleano };
+
+    if (operador === '==' && valor === 500 && accion === 'detenerse' && booleano === true) {
+      return { valido: true, tipoFallo: '', ...baseRes };
+    }
+    
+    // Matrix de errores
+    if (operador === '<') {
+      return { valido: false, tipoFallo: 'ANTES_DE_AGUA', ...baseRes };
+    }
+    
+    if (valor !== 500) {
+      return { valido: false, tipoFallo: 'CONTAMINACION', ...baseRes };
+    }
+
+    if (accion === 'apagarMotor') {
+      return { valido: false, tipoFallo: 'APAGADO', ...baseRes };
+    }
+
+    if (accion === 'lanzarGasolina') {
+      return { valido: false, tipoFallo: 'CONTAMINACION', ...baseRes };
+    }
+
+    if (booleano === false) {
+      return { valido: false, tipoFallo: 'NO_EXTRAER', ...baseRes };
+    }
+
+    return { valido: false, tipoFallo: 'DESCONOCIDO', ...baseRes };
+  }
+
+
   evaluar(codigo: string, fase: FaseTaladro = 1): ResultadoEvaluacionTaladro {
     const errores: ErrorEjecucion[] = [];
     const banderas: BanderasEstrategiaTaladro = {
       estrategiaVaporCorrecta: false,
       estrategiaPesoCorrecta: false,
-      estrategiaCarbonCorrecta: false
+      estrategiaAguaCorrecta: false
     };
 
     if (fase === 1) {
@@ -58,48 +132,18 @@ export class EvaluadorTaladroService {
     }
 
     if (fase === 2) {
-      const fase2Regex = /evento\s*\(\s*taladro\.sobrecarga\s*\)\s*\{\s*si\s*\(\s*taladro\.pesoCarga\s*>\s*50\s*\)\s*\{\s*taladro\.empacarCristales\(\);?\s*\}\s*\}/i;
+      const fase2Regex = /evento\s*\(\s*taladro\.estabilizarPresion\s*\)\s*\{\s*si\s*\(\s*taladro\.presion\s*==\s*50\s*\)\s*\{\s*taladro\.mantenerFuerza\(\);?\s*\}\s*\}/i;
       banderas.estrategiaPesoCorrecta = fase2Regex.test(codigo);
       if (!banderas.estrategiaPesoCorrecta) {
-        errores.push({ mensaje: this.explicarErrorPeso(codigo, fase) });
+        errores.push({ mensaje: this.explicarErrorPresion(codigo, fase) });
       }
     }
 
     if (fase === 3) {
-      const fase3Regex = /evento\s*\(\s*taladro\.tanqueVacio\s*\)\s*\{\s*si\s*\(\s*taladro\.carbon\s*==\s*0\s*\)\s*\{\s*taladro\.recargarCarbon\(\);?\s*\}\s*\}/i;
-      banderas.estrategiaCarbonCorrecta = fase3Regex.test(codigo);
-      if (!banderas.estrategiaCarbonCorrecta) {
-        errores.push({ mensaje: this.explicarErrorCarbon(codigo, fase) });
-      }
-    }
-
-    if (fase === 4) {
-      const plantillaCorrecta = /evento\s*\(\s*taladro\.operacionCompleta\s*\)\s*\{/i.test(codigo);
-      banderas.estrategiaVaporCorrecta = plantillaCorrecta && this.estrategiaTemperaturaRegex.test(codigo);
-      banderas.estrategiaPesoCorrecta = plantillaCorrecta && this.estrategiaPesoRegex.test(codigo);
-      banderas.estrategiaCarbonCorrecta = plantillaCorrecta && this.estrategiaCarbonRegex.test(codigo);
-
-      if (!banderas.estrategiaVaporCorrecta) {
-        errores.push({ mensaje: this.explicarErrorTemperatura(codigo, fase) });
-      }
-      if (!banderas.estrategiaPesoCorrecta) {
-        errores.push({ mensaje: this.explicarErrorPeso(codigo, fase) });
-      }
-      if (!banderas.estrategiaCarbonCorrecta) {
-        errores.push({ mensaje: this.explicarErrorCarbon(codigo, fase) });
-      }
-
-      const ordenCorrecto = new RegExp(
-        this.estrategiaTemperaturaRegex.source + '.*?' + 
-        this.estrategiaPesoRegex.source + '.*?' + 
-        this.estrategiaCarbonRegex.source, 'is'
-      );
-
-      if (errores.length === 0 && !ordenCorrecto.test(codigo)) {
-        errores.push({ mensaje: 'Los tres protocolos deben conservar el orden: temperatura, peso y carbón.' });
-        banderas.estrategiaVaporCorrecta = false;
-        banderas.estrategiaPesoCorrecta = false;
-        banderas.estrategiaCarbonCorrecta = false;
+      const fase3Regex = /evento\s*\(\s*taladro\.recolectarAgua\s*\)\s*\{\s*si\s*\(\s*taladro\.profundidad\s*==\s*500\s*\)\s*\{\s*taladro\.extraerAgua\s*=\s*true;?\s*\}\s*\}/i;
+      banderas.estrategiaAguaCorrecta = fase3Regex.test(codigo);
+      if (!banderas.estrategiaAguaCorrecta) {
+        errores.push({ mensaje: this.explicarErrorAgua(codigo, fase) });
       }
     }
 
@@ -111,8 +155,23 @@ export class EvaluadorTaladroService {
     };
   }
 
+  private explicarErrorAgua(codigo: string, fase: FaseTaladro): string {
+    const eventoRegex = new RegExp(`evento\\s*\\(\\s*taladro\\.recolectarAgua\\s*\\)\\s*\\{`, 'i');
+    
+    if (!eventoRegex.test(codigo)) {
+      return 'La plantilla fija del evento de agua fue alterada.';
+    }
+    if (!/si\s*\(\s*taladro\.profundidad\s*==\s*500\s*\)/i.test(codigo)) {
+      return 'Falta comprobar si la profundidad es exactamente 500.';
+    }
+    if (!/taladro\.extraerAgua\s*=\s*true/i.test(codigo)) {
+      return 'La condicion de agua necesita taladro.extraerAgua = true;.';
+    }
+    return 'La accion de agua debe estar dentro de su condicion.';
+  }
+
   private explicarErrorTemperatura(codigo: string, fase: FaseTaladro): string {
-    const evento = fase === 4 ? 'operacionCompleta' : 'sobrecalentamiento';
+    const evento = 'sobrecalentamiento';
     const eventoRegex = new RegExp(`evento\\s*\\(\\s*taladro\\.${evento}\\s*\\)\\s*\\{`, 'i');
     
     if (!eventoRegex.test(codigo)) {
@@ -122,40 +181,25 @@ export class EvaluadorTaladroService {
       return 'Falta comprobar si la temperatura supera 100.';
     }
     if (!/taladro\.liberarVapor\(\);?/i.test(codigo)) {
-      return 'La condición de temperatura necesita taladro.liberarVapor();.';
+      return 'La condicion de temperatura necesita taladro.liberarVapor();.';
     }
-    return 'La acción de vapor debe estar dentro de su condición.';
+    return 'La accion de vapor debe estar dentro de su condicion.';
   }
 
-  private explicarErrorPeso(codigo: string, fase: FaseTaladro): string {
-    const evento = fase === 4 ? 'operacionCompleta' : 'sobrecarga';
+  private explicarErrorPresion(codigo: string, fase: FaseTaladro): string {
+    const evento = 'estabilizarPresion';
     const eventoRegex = new RegExp(`evento\\s*\\(\\s*taladro\\.${evento}\\s*\\)\\s*\\{`, 'i');
     
     if (!eventoRegex.test(codigo)) {
-      return 'La plantilla fija del evento de peso fue alterada.';
+      return 'La plantilla fija del evento de presion fue alterada.';
     }
-    if (!/si\s*\(\s*taladro\.pesoCarga\s*>\s*50\s*\)/i.test(codigo)) {
-      return 'Falta comprobar si el peso de cristales supera 50.';
+    if (!/si\s*\(\s*taladro\.presion\s*==\s*50\s*\)/i.test(codigo)) {
+      return 'La presion debe ser exactamente 50 para no desestabilizar la maquina.';
     }
-    if (!/taladro\.empacarCristales\(\);?/i.test(codigo)) {
-      return 'La condición de peso necesita taladro.empacarCristales();.';
+    if (!/taladro\.mantenerFuerza\(\);?/i.test(codigo)) {
+      return 'La condicion de presion necesita taladro.mantenerFuerza();.';
     }
-    return 'La acción de empaquetado debe estar dentro de su condición.';
+    return 'La accion de mantener fuerza debe estar dentro de su condicion.';
   }
 
-  private explicarErrorCarbon(codigo: string, fase: FaseTaladro): string {
-    const evento = fase === 4 ? 'operacionCompleta' : 'tanqueVacio';
-    const eventoRegex = new RegExp(`evento\\s*\\(\\s*taladro\\.${evento}\\s*\\)\\s*\\{`, 'i');
-
-    if (!eventoRegex.test(codigo)) {
-      return 'La plantilla fija del evento de combustible fue alterada.';
-    }
-    if (!/si\s*\(\s*taladro\.carbon\s*==\s*0\s*\)/i.test(codigo)) {
-      return 'Falta comprobar si el carbón llegó a 0.';
-    }
-    if (!/taladro\.recargarCarbon\(\);?/i.test(codigo)) {
-      return 'La condición de combustible necesita taladro.recargarCarbon();.';
-    }
-    return 'La recarga de carbón debe estar dentro de su condición.';
-  }
 }
