@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfiguracionNivelAula } from '../core/configuracion-niveles-aula';
 
 // ── Interfaces que reflejan exactamente los schemas de FastAPI ─────
 
@@ -34,7 +35,9 @@ export interface ParametrosEvaluacion {
   tiempo_2_estrellas: number;       // Segundos para 2 estrellas
   intentos_max_sin_penalidad: number; // Intentos sin penalidad
   anti_copia?: boolean;
+  ayudas_habilitadas?: boolean;
   fases_seleccionadas?: number[];
+  configuracion_nivel?: ConfiguracionNivelAula;
 }
 
 export interface RetoPersonalizadoCreate {
@@ -58,6 +61,41 @@ export interface RetoPersonalizadoResponse {
   fecha_limite?: string | null;
   fecha_cierre?: string | null;
   completado: boolean;
+}
+
+export interface SeguimientoJugador {
+  jugador_id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  completado: boolean;
+  estrellas_obtenidas: number;
+  calificacion_numerica: number;
+  intentos: number;
+  tiempo_segundos: number;
+  codigo_solucion?: string | null;
+  fecha_completado?: string | null;
+}
+
+export interface SeguimientoActividad {
+  reto_id: string;
+  reto_nivel_id: number;
+  titulo: string;
+  estado: 'borrador' | 'publicado' | 'vencido' | 'cerrado';
+  fecha_limite?: string | null;
+  fecha_cierre?: string | null;
+  total_jugadores: number;
+  completados: number;
+  pendientes: number;
+  promedio_calificacion: number;
+  jugadores: SeguimientoJugador[];
+}
+
+export interface ReporteAula {
+  aula_id: string;
+  nombre_aula: string;
+  generado_en: string;
+  actividades: SeguimientoActividad[];
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -103,7 +141,7 @@ export class AulasService {
 
   /**
    * Crea un reto personalizado en un aula reutilizando un nivel oficial.
-   * El profesor configura solo los parámetros de evaluación (tiempos, intentos).
+   * El profesor configura la evaluación y los parámetros seguros del nivel.
    */
   crearRetoEnAula(aulaId: string, datos: RetoPersonalizadoCreate): Observable<RetoPersonalizadoResponse> {
     return this.http.post<RetoPersonalizadoResponse>(`/aulas/${aulaId}/retos`, datos);
@@ -114,6 +152,28 @@ export class AulasService {
    */
   retosDelAula(aulaId: string): Observable<RetoPersonalizadoResponse[]> {
     return this.http.get<RetoPersonalizadoResponse[]>(`/aulas/${aulaId}/retos`);
+  }
+
+  seguimientoDelAula(aulaId: string): Observable<ReporteAula> {
+    return this.http.get<ReporteAula>(`/aulas/${aulaId}/seguimiento`);
+  }
+
+  programarActividad(
+    aulaId: string,
+    retoId: string,
+    fechaLimite: string | null
+  ): Observable<RetoPersonalizadoResponse> {
+    return this.http.patch<RetoPersonalizadoResponse>(
+      `/aulas/${aulaId}/retos/${retoId}/programacion`,
+      { fecha_limite: fechaLimite }
+    );
+  }
+
+  cerrarActividad(aulaId: string, retoId: string): Observable<RetoPersonalizadoResponse> {
+    return this.http.post<RetoPersonalizadoResponse>(
+      `/aulas/${aulaId}/retos/${retoId}/cerrar`,
+      {}
+    );
   }
 
   /**

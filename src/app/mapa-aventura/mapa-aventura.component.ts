@@ -1,11 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ProgresoService } from '../services/progreso.service';
+import { finalize } from 'rxjs';
+import { obtenerOrdenProgreso, ProgresoService } from '../services/progreso.service';
+import { LoaderService } from '../services/loader.service';
+import { NIVELES_DRAGONCODE, TOTAL_NIVELES, obtenerNivel } from '../core/catalogo-niveles';
 
 export interface LevelDescriptor {
   id: number;
   titulo: string;
+  tema: string;
+  descripcion: string;
+  fases: number;
   completado: boolean;
   bloqueado: boolean;
 }
@@ -18,18 +24,33 @@ export interface LevelDescriptor {
   styleUrl: './mapa-aventura.component.scss'
 })
 export class MapaAventuraComponent implements OnInit {
+  readonly totalNiveles = TOTAL_NIVELES;
+  readonly catalogoNiveles = NIVELES_DRAGONCODE;
   niveles: LevelDescriptor[] = [];
 
-  constructor(private progresoService: ProgresoService) {}
+  constructor(
+    private progresoService: ProgresoService,
+    private loaderService: LoaderService
+  ) {}
+
+  get nivelesCompletados(): number {
+    return this.niveles.filter(nivel => nivel.completado).length;
+  }
+
+  get porcentajeProgreso(): number {
+    return (this.nivelesCompletados / this.totalNiveles) * 100;
+  }
 
   ngOnInit(): void {
     this.construirMapa(new Set<number>());
-    this.progresoService.miProgreso().subscribe({
+    this.progresoService.miProgreso().pipe(
+      finalize(() => this.loaderService.ocultar())
+    ).subscribe({
       next: progresos => {
         const completados = new Set(
           progresos
             .filter(progreso => progreso.completado)
-            .map(progreso => progreso.reto_nivel_id)
+            .map(obtenerOrdenProgreso)
         );
         this.construirMapa(completados);
       },
@@ -38,21 +59,17 @@ export class MapaAventuraComponent implements OnInit {
   }
 
   private construirMapa(completados: Set<number>): void {
-    const titulos: Record<number, string> = {
-      1: 'El Ogro',
-      2: 'Taladro a Vapor'
-    };
-    const ultimoNivelImplementado = 2;
-
-    this.niveles = Array.from({ length: 10 }, (_, i) => {
+    this.niveles = Array.from({ length: this.totalNiveles }, (_, i) => {
       const id = i + 1;
+      const nivel = obtenerNivel(id);
       return {
         id,
-        titulo: titulos[id] ?? `Nivel ${id}`,
+        titulo: nivel?.titulo ?? `Nivel ${id}`,
+        tema: nivel?.tema ?? 'Fundamentos de programación',
+        descripcion: nivel?.descripcion ?? 'Completa el desafío para continuar tu aventura.',
+        fases: nivel?.fases ?? 4,
         completado: completados.has(id),
-        // TODO: [DEV MODE] Eliminar antes de producción. 
-        // Original: bloqueado: id > ultimoNivelImplementado || (id > 1 && !completados.has(id - 1))
-        bloqueado: id > ultimoNivelImplementado // Desbloquea todos los niveles que ya estén implementados
+        bloqueado: id > 1 && !completados.has(id) && !completados.has(id - 1)
       };
     });
   }

@@ -9,6 +9,8 @@ export interface GuardarProgresoRequest {
   tiempo_segundos: number;   // Segundos totales del intento
   intentos: number;          // Número de intentos que tomó completarlo
   codigo_solucion: string;   // El código que escribió el jugador
+  vidas_restantes: number;
+  ayudas_usadas: boolean;
   aula_id?: string;          // Opcional: si el jugador está en un aula
   reto_personalizado_id?: string; // UUID del reto específico completado en el aula
 }
@@ -22,11 +24,20 @@ export interface ProgresoResponse {
 
 export interface ProgresoNivel {
   reto_nivel_id: number;
+  nivel_orden?: number;
   completado: boolean;
   estrellas_obtenidas: number;
   intentos: number;
   tiempo_segundos: number;
   fecha_completado: string | null;
+}
+
+/**
+ * Obtiene el número público del nivel. El ID queda reservado para relacionar
+ * registros internos y puede no coincidir con el orden después de una migración.
+ */
+export function obtenerOrdenProgreso(progreso: ProgresoNivel): number {
+  return progreso.nivel_orden ?? progreso.reto_nivel_id;
 }
 
 // ─────────────────────────────────────────────────────────────────

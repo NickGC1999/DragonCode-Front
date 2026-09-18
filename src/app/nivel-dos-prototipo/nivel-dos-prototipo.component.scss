@@ -26,7 +26,7 @@ button, textarea { font: inherit; }
   opacity: 0;
   transition: opacity 0.5s ease;
   z-index: 10000;
-  
+
   &.activo {
     opacity: 1;
     pointer-events: all;
@@ -110,18 +110,18 @@ button, textarea { font: inherit; }
 /* ========================================================
    PANEL DE CONTROL: FONDO NIVEL 2
    Ajusta este valor para controlar el zoom del fondo.
-   Ejemplos: 
-   'cover' (por defecto, llena la pantalla adapt�ndose)
-   '150%' (aumenta el tamaño, m�s zoom in)
-   '100%' (tama�o original de la imagen)
+   Ejemplos:
+   'cover' (por defecto, llena la pantalla adaptándose)
+   '150%' (aumenta el tamaño, más zoom in)
+   '100%' (tamaño original de la imagen)
    ======================================================== */
 $zoom-fondo-nivel: cover;
 
 /* ========================================================
    PANEL DE CONTROL: SUELO ROCOSO (NIVEL 2)
    Ajusta este valor para controlar el 'zoom' (tamaño) de las rocas del suelo.
-   - Modificar este valor NO hará que las rocas pasen por encima de la l�nea blanca,
-     solo crecerón hacia abajo.
+   - Modificar este valor NO hará que las rocas pasen por encima de la línea blanca,
+     solo crecerán hacia abajo.
    - Ejemplos: '45%' (pequeño), '58%' (30% zoom), '75%' (grande)
    ======================================================== */
 $zoom-nuevo-suelo: 70%;
@@ -155,7 +155,7 @@ $velocidad-temblor: 0.13s;        /* Velocidad a la que tiembla la maquina (perf
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: 
+  background:
     linear-gradient(90deg, rgba(0,0,0,0.95) 0 8%, transparent 20% 80%, rgba(0,0,0,0.95) 92% 100%),
     linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 95%);
   opacity: $intensidad-efecto-tunel;
@@ -194,7 +194,7 @@ $velocidad-temblor: 0.13s;        /* Velocidad a la que tiembla la maquina (perf
 
 .nuevo-suelo-relleno {
   position: absolute;
-  top: 95%; /* Empieza m�s abajo para no asomarse por las rocas transparentes superiores */
+  top: 95%; /* Empieza más abajo para no asomarse por las rocas transparentes superiores */
   left: -100vw;
   right: -100vw;
   height: 200vh;
@@ -230,7 +230,7 @@ $velocidad-temblor: 0.13s;        /* Velocidad a la que tiembla la maquina (perf
   height: $zoom-nuevo-suelo;
   z-index: 5;
   pointer-events: none;
-  
+
   /* Mascara que hace invisible la sombra en las areas transparentes de la roca */
   -webkit-mask-image: url('/assets/images/aventura/nivel2/suelo-superior-nivel-2.png');
   -webkit-mask-position: top center;
@@ -1111,12 +1111,16 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   padding: 20px;
   display: grid;
   place-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   background: rgba(2, 4, 6, .9);
   backdrop-filter: blur(4px);
 }
 
 .modal-resultado {
   width: min(540px, 100%);
+  margin: auto;
   padding: 28px;
   color: #e6e6e6;
   background: #211111;
@@ -1132,6 +1136,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .resultado-grid strong { color: #ffe36a; font-size: 1.35rem; }
 .resultado-grid span { color: #8ca8a3; font-size: .63rem; text-transform: uppercase; }
 .modal-resultado > button { margin-top: 14px; padding: 9px 13px; color: #fff; background: #2d5a50; border: 2px solid #4a9e8e; cursor: pointer; font-family: 'TuFuentePixel', monospace; }
+.modal-resultado > .btn-salir-resultado {
+  margin-left: 8px;
+  color: #ffd9d9;
+  background: #56272b;
+  border-color: #bd515b;
+}
 
 .modal-ayuda { background: #111827; border-color: #7157a6; }
 .modal-ayuda p { color: #c3cadb; line-height: 1.5; text-align: left; }
@@ -1144,9 +1154,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   inset: 0;
   z-index: 110;
   padding: clamp(6px, 1.8vh, 18px);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   color: #fff;
   background: rgba(0, 0, 0, .9);
   font-family: 'Press Start 2P', 'TuFuentePixel', monospace;
@@ -1157,12 +1170,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   position: relative;
   z-index: 10;
   width: min(720px, 94vw);
-  max-height: calc(100dvh - 12px);
+  margin: auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   text-align: center;
 }
 
@@ -1305,6 +1318,29 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   overflow: hidden;
   background: #0b0f19;
 }
+
+@media (max-width: 767px), (max-height: 620px) {
+  .modal-game-over {
+    box-sizing: border-box;
+    justify-content: flex-start;
+    padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+
+    .draco-llorando {
+      width: clamp(100px, 28dvh, 160px);
+      margin: 0 0 10px;
+    }
+
+    h1 { margin: 4px 0 8px; font-size: clamp(1.45rem, 8vw, 2.2rem); }
+    .subtitulo-derrota { margin: 0 0 14px; }
+    .botones-modal { gap: 10px; padding-bottom: 4px; }
+  }
+
+  .celebracion-panel {
+    width: min(720px, 100%);
+    padding-block: 8px;
+  }
+}
   .juego-layout {
     height: calc(100dvh - 60px);
     padding: 1rem;
@@ -1405,7 +1441,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   justify-content: center;
   align-items: center;
   font-family: 'Press Start 2P', 'Courier New', monospace;
-  
+
   .draco-llorando {
     width: 250px;
     margin-bottom: 40px;
@@ -1420,7 +1456,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     text-shadow: 4px 4px 0px #000;
     text-align: center;
   }
-  
+
   .subtitulo-derrota {
     color: #ccc;
     font-size: clamp(10px, 1.5vw, 16px);
@@ -1451,10 +1487,10 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       transition: transform 0.1s;
 
       &:active { transform: translate(4px, 4px); box-shadow: none; }
-      
+
       &.btn-verde { background: #00AA00; color: white; border-color: #005500; }
       &.btn-rojo { background: #E50000; color: white; border-color: #8B0000; }
-      
+
       &:hover { filter: brightness(1.2); }
     }
   }
@@ -1609,20 +1645,20 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* =========================================================================
    PANEL DE CONTROL DE ANIMACIONES (TUBO Y BROCA)
 ========================================================================= */
-/* 1. Corte del tubo telesc�pico */
+/* 1. Corte del tubo telescópico */
 $corte-inicial-tubo: 31.5%;
 $distancia-perforacion: 35%; /* Distancia que viaja el taladro */
 $corte-final-tubo: $corte-inicial-tubo - $distancia-perforacion;
 
-/* 2. Intensidad de vibraci�n (Temblor) */
-$fuerza-temblor-broca: 2px;  /* Original: 1px. Aumenta para m�s violencia */
-$fuerza-temblor-tubo: 1.2px;  /* Original: 0.5px. Aumenta para m�s violencia */
-$velocidad-broca: 0.08s;     /* Original: 0.08s. Menor = m�s r�pido */
-$velocidad-tubo: 0.12s;      /* Original: 0.12s. Menor = m�s r�pido */
+/* 2. Intensidad de vibración (Temblor) */
+$fuerza-temblor-broca: 2px;  /* Original: 1px. Aumenta para más violencia */
+$fuerza-temblor-tubo: 1.2px;  /* Original: 0.5px. Aumenta para más violencia */
+$velocidad-broca: 0.08s;     /* Original: 0.08s. Menor = más rápido */
+$velocidad-tubo: 0.12s;      /* Original: 0.12s. Menor = más rápido */
 
 
-.taladro-wrap .capa-tubo { 
-  z-index: 2 !important; 
+.taladro-wrap .capa-tubo {
+  z-index: 2 !important;
   clip-path: inset(0 0 $corte-inicial-tubo 0);
   transition: filter 0.65s ease, transform 0.45s ease, clip-path 1.5s ease-in;
 }
@@ -1630,8 +1666,8 @@ $velocidad-tubo: 0.12s;      /* Original: 0.12s. Menor = m�s r�pido */
   clip-path: inset(0 0 $corte-final-tubo 0);
 }
 
-.taladro-wrap .capa-punta { 
-  z-index: 3 !important; 
+.taladro-wrap .capa-punta {
+  z-index: 3 !important;
   transition: top 1.5s ease-in;
 }
 
@@ -1727,32 +1763,3 @@ $velocidad-tubo: 0.12s;      /* Original: 0.12s. Menor = m�s r�pido */
   0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

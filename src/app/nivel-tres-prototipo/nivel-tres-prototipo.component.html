@@ -1,0 +1,156 @@
+<div class="nivel-dos-shell nivel-tres-shell">
+  <app-layout-juego class="juego-area"
+    [configuracionTarjetas]="configuracionTarjetasActual"
+    [estadoObjetos]="inventarioNivel"
+    [antiCopiaActivo]="antiCopiaActivo"
+    [ejecutando]="ejecutando"
+    [nivelActual]="3"
+    [modoJuego]="modoJuegoActual"
+    [modoPlantilla]="true"
+    [listoParaEjecutar]="codigoUsuario.trim().length > 0"
+    [controlManualTarjetas]="true"
+    (ejecutarJuego)="ejecutarCodigo($event)"
+    (onLimpiarPlantilla)="limpiarPergamino()"
+    (onBorrarLineaPlantilla)="borrarLinea()"
+    (onDeshacerPaso)="retrocederPaso($event)"
+    (onUsarItem)="manejarUsoPocion($event)"
+    (onUsarTarjeta)="manejarUsoTarjeta($event)">
+    <section class="tablero-juego" aria-label="Batalla de las variables">
+      <div class="hud-juego">
+        <div class="vidas" aria-label="Vidas disponibles">
+          <span *ngFor="let vida of [1, 2, 3]" [class.perdida]="vida > vidas">♥</span>
+        </div>
+        <div class="contador-reparacion" aria-label="Fases superadas">
+          <span class="icono-herramienta">◈</span>
+          <strong>{{ fasesSuperadas }} / {{ fases.length }}</strong>
+        </div>
+        <div class="contador-fase">{{ faseActualIndice + 1 }} — {{ fases.length }}</div>
+      </div>
+
+      <div class="escena-maquina escena-magia"
+           [class.cueva-oscura]="!luzActiva"
+           [class.memorizando]="estadoEscena === 'memorizando'"
+           [class.hechizo-listo]="estadoEscena === 'hechizo-listo'"
+           [class.atacando]="estadoEscena === 'atacando'"
+           [class.sobrecarga]="estadoEscena === 'sobrecarga'"
+           [class.victoria]="estadoEscena === 'victoria'">
+        <div class="luz-magica"></div>
+        <div class="oscuridad-cueva"></div>
+
+        <aside class="banco-memoria" aria-label="Variables almacenadas">
+          <div class="runa-memoria" data-tipo="booleano"
+               [class.requerida]="variableRequerida('luz')" [class.llena]="estaEnMemoria('luz')">
+            <div class="runa-cabecera"><span>BOOL</span><strong>luz</strong></div>
+            <div class="nucleo-memoria"><i aria-hidden="true"></i><code>{{ valorMemoria('luz') }}</code></div>
+            <small>{{ estaEnMemoria('luz') ? tipoMemoria('luz') : 'ESPACIO DISPONIBLE' }}</small>
+          </div>
+          <div class="runa-memoria" data-tipo="texto"
+               [class.requerida]="variableRequerida('elemento')" [class.llena]="estaEnMemoria('elemento')">
+            <div class="runa-cabecera"><span>STR</span><strong>elemento</strong></div>
+            <div class="nucleo-memoria"><i aria-hidden="true"></i><code>{{ valorMemoria('elemento') }}</code></div>
+            <small>{{ estaEnMemoria('elemento') ? tipoMemoria('elemento') : 'ESPACIO DISPONIBLE' }}</small>
+          </div>
+          <div class="runa-memoria" data-tipo="entero"
+               [class.requerida]="variableRequerida('cantidad')" [class.llena]="estaEnMemoria('cantidad')">
+            <div class="runa-cabecera"><span>INT</span><strong>cantidad</strong></div>
+            <div class="nucleo-memoria"><i aria-hidden="true"></i><code>{{ valorMemoria('cantidad') }}</code></div>
+            <small>{{ estaEnMemoria('cantidad') ? tipoMemoria('cantidad') : 'ESPACIO DISPONIBLE' }}</small>
+          </div>
+        </aside>
+
+        <div class="campo-batalla">
+          <div class="murcielagos" [class.con-jefe]="faseActual.numero === 4"
+               [attr.aria-label]="faseActual.numero === 4 ? 'Murciélago alfa' : 'Tres murciélagos'">
+            <ng-container *ngIf="faseActual.numero < 4">
+              <div class="murcielago" *ngFor="let enemigo of [1, 2, 3]"
+                   role="img" aria-label="Murciélago de la cueva"
+                   [class.derrotado]="enemigo <= murcielagosDerrotados"></div>
+            </ng-container>
+            <div class="murcielago murcielago-jefe" *ngIf="faseActual.numero === 4"
+                 role="img" aria-label="Murciélago alfa, jefe de la cueva"
+                 [class.derrotado]="estadoEscena === 'victoria'">
+              <span>ALFA</span>
+            </div>
+          </div>
+
+          <div class="proyectiles" aria-hidden="true">
+            <i *ngFor="let proyectil of [1, 2, 3]" [class.visible]="cantidadAtaques >= proyectil"></i>
+          </div>
+          <div class="drako-hechicero" role="img"
+               aria-label="Drako preparando las variables para combatir">
+            <i class="orbe" [class.encendido]="elementoActivo === 'Fuego'"></i>
+          </div>
+        </div>
+
+        <div class="diagnostico diagnostico-magia">
+          <span>ESTADO DEL HECHIZO</span>
+          <strong>{{ estadoEscenaTexto }}</strong>
+          <p>{{ bitacora }}</p>
+        </div>
+
+        <div class="mision-flotante" aria-live="polite">
+          <span>FASE {{ faseActualIndice + 1 }}/{{ fases.length }} · {{ faseActual.concepto | uppercase }}</span>
+          <strong>{{ faseActual.titulo }}</strong>
+          <p>{{ faseActual.objetivo }}</p>
+          <small *ngIf="pistaVisible" class="mensaje-objeto">{{ mensajeObjeto }}</small>
+        </div>
+      </div>
+    </section>
+  </app-layout-juego>
+
+  <div class="modal-overlay" *ngIf="falloFase || gameOver">
+    <section class="modal-resultado">
+      <span class="modal-icono">!</span>
+      <h2>{{ gameOver ? 'SIN ENERGÍA MÁGICA' : tituloFallo }}</h2>
+      <p>{{ bitacora }}</p>
+      <div class="errores-modal" *ngIf="errores.length">
+        <p *ngFor="let error of errores">{{ error }}</p>
+      </div>
+      <p class="vidas-restantes">Vidas restantes: {{ vidas }}</p>
+      <button type="button" *ngIf="!gameOver" (click)="reintentarFase()">Reintentar fase</button>
+      <button type="button" *ngIf="gameOver" (click)="reiniciarNivel()">Reiniciar nivel</button>
+      <button type="button" class="btn-salir-resultado" (click)="salir()">{{ modoJuegoActual === 'aula' ? 'Volver al aula' : 'Salir' }}</button>
+    </section>
+  </div>
+
+  <div class="celebracion-overlay" *ngIf="nivelCompletado">
+    <div class="particulas-victoria" aria-hidden="true">
+      <i *ngFor="let particula of [1,2,3,4,5,6,7,8,9,10,11,12]"></i>
+    </div>
+    <section class="celebracion-panel nivel-final">
+      <img src="/assets/images/exprecionsedraco/feliz.png" class="draco-feliz"
+           alt="Drako celebrando el dominio de las variables">
+      <h1>{{ modoJuegoActual === 'aula' ? '¡ACTIVIDAD COMPLETADA!' : '¡MISIÓN COMPLETADA!' }}</h1>
+      <p class="mensaje-recompensa">{{ mensajeRecompensa }}</p>
+      <div class="estrellas-celebracion" [attr.aria-label]="estrellas + ' estrellas obtenidas'">
+        <span *ngFor="let estrella of estrellasAnimadas; let indice = index"
+              [style.animation-delay.ms]="350 + indice * 260">★</span>
+      </div>
+      <div class="resultado-grid resultado-final">
+        <div><strong>{{ calificacion }}</strong><span>calificación</span></div>
+        <div><strong>{{ tiempoSegundos }}s</strong><span>tiempo</span></div>
+        <div><strong>{{ intentosCalificables }}</strong><span>intentos</span></div>
+      </div>
+      <p class="detalle-final">
+        {{ mensajeSincronizacion || 'Dominaste booleanos, textos y enteros para preparar el combate de Drako.' }}
+      </p>
+      <div class="botones-celebracion">
+        <button type="button" class="btn-secundario" (click)="reiniciarNivel()">REINICIAR NIVEL</button>
+        <button type="button" class="btn-victoria" (click)="salir()">{{ modoJuegoActual === 'aula' ? 'VOLVER AL AULA' : 'SALIR DE LA MISIÓN' }}</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-overlay" *ngIf="ayudaVisible && ayudasHabilitadas">
+    <section class="modal-resultado modal-ayuda">
+      <span class="modal-icono">▣</span>
+      <h2>GRIMORIO DE VARIABLES</h2>
+      <p><strong>Una variable</strong> es una caja con nombre que guarda un valor.</p>
+      <p><strong>=</strong> asigna un valor a esa caja; no representa una igualdad matemática.</p>
+      <p><strong>Booleano:</strong> true o false. <strong>Texto:</strong> usa comillas. <strong>Entero:</strong> representa cantidades completas.</p>
+      <p>La última línea del pergamino es fija y utiliza las variables después de almacenarlas.</p>
+      <code>luz = true<br>elemento = "Fuego"<br>cantidad = 3</code>
+      <button type="button" (click)="ayudaVisible = false">Cerrar grimorio</button>
+    </section>
+  </div>
+</div>

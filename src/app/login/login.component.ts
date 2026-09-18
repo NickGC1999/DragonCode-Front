@@ -88,10 +88,9 @@ export class LoginComponent implements OnInit {
   }
 
   iniciarConGoogle(): void {
-    // Para propósitos de la tesis/prototipo, mostramos una notificación
-    // La implementación real requiere configurar credenciales OAuth2 en Google Cloud.
+    // Conserva la acción visual hasta conectar OAuth con el backend real.
     this.notificationService.show(
-      'Integración con Google en desarrollo (Requiere OAuth2 en Producción).', 
+      'Integración con Google en desarrollo (requiere OAuth2 en producción).',
       'success'
     );
   }
