@@ -54,7 +54,7 @@ export class AppComponent {
       if (event instanceof NavigationError && esErrorCargaDiferida(event.error)) {
         sessionStorage.setItem(
           MENSAJE_RECARGA_KEY,
-          'DragonCode se actualizó. Los niveles ya están listos para continuar.'
+          'DragonCode se actualizÃ³. Los niveles ya estÃ¡n listos para continuar.'
         );
         window.location.reload();
         return;
@@ -63,7 +63,8 @@ export class AppComponent {
       if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
         if (event instanceof NavigationEnd) {
           const esNivel = event.urlAfterRedirects.includes('/nivel/')
-            || event.urlAfterRedirects.includes('/prototipo/nivel-');
+            || event.urlAfterRedirects.includes('/prototipo/nivel-')
+            || event.urlAfterRedirects.includes('/aventura');
           this.mostrarFooter = !esNivel;
         }
         this.loaderService.ocultar();
