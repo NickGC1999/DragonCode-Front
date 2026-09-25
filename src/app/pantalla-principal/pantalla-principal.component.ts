@@ -18,7 +18,7 @@ import {
 } from '../services/aulas.service';
 import { obtenerOrdenProgreso, ProgresoService } from '../services/progreso.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, filter, take } from 'rxjs/operators';
 import {
   NotificacionInterna,
   NotificacionesService
@@ -43,9 +43,12 @@ interface Rune {
 }
 
 interface WorldProgress {
-  level:  number;
-  name:   string;
-  stars:  number;   // 0-3 desde la BD
+  level: number;
+  name: string;
+  stars: number;
+  tema?: string;
+  descripcion?: string;
+  reglaEstrella3?: string;
 }
 
 type PlazoActividad = 'sin_limite' | '30_minutos' | '1_hora' | '24_horas' | '7_dias' | 'personalizado';
@@ -110,11 +113,23 @@ export class PantallaPrincipalComponent implements OnInit {
   isStarsModalOpen = false;
 
   // ── DATOS: Mundos y progreso de estrellas ────────────────────────
-  worldsProgress: WorldProgress[] = Array.from({ length: 5 }, (_, i) => ({
-    level: i + 1,
-    name:  `Mundo ${i + 1}`,
-    stars: 0
-  }));
+  worldsProgress: WorldProgress[] = Array.from({ length: 5 }, (_, i) => {
+    const reglasEstrella3 = [
+      'Resolver el nivel usando el camino óóptimo, sin colocar tarjetas/bloques adicionales innecesarios.',
+      'Superar el nivel al primer intento, sin ningún fallo.',
+      'Completar la cueva perfectamente, sin cometer errores ni perder vidas.',
+      'Clasificar los materiales sin cometer errores ni perder vidas.',
+      'Automatizar la fábrica sin cometer errores ni perder vidas.'
+    ];
+    return {
+      level: i + 1,
+      name:  NIVELES_DRAGONCODE[i].titulo,
+      tema:  NIVELES_DRAGONCODE[i].tema,
+      descripcion: NIVELES_DRAGONCODE[i].descripcion,
+      reglaEstrella3: reglasEstrella3[i],
+      stars: 0
+    };
+  });
 
   // ── ESTADO: Formulario de Creación (Parte 1) ─────────────────
   tituloReto         = '';
@@ -370,10 +385,11 @@ export class PantallaPrincipalComponent implements OnInit {
     // Cargar la lista de aulas creadas para mostrarlas inmediatamente en Paso 1
     this.aulasService.misAulas().subscribe({
       next: (aulas) => {
-        this.userProfile$.subscribe(profile => {
-          if (profile && profile.id) {
-            this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
-          }
+        this.userProfile$.pipe(
+          filter(p => !!p && !!p.id),
+          take(1)
+        ).subscribe(profile => {
+          this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
         });
       }
     });
@@ -404,11 +420,20 @@ export class PantallaPrincipalComponent implements OnInit {
 
   /** Paso 2 → 3: Nivel seleccionado, ir a parámetros */
   siguientePaso2(): void {
-    if (this.parametrosReto.fases_seleccionadas!.length === 0) {
-      this.notificationService.show('Debes seleccionar al menos una fase.', 'error');
-      return;
-    }
     this.pasoCrearAula = 3;
+  }
+
+
+
+  clickNivelDirecto(nivelId: number): void {
+    this.nivelSeleccionado = nivelId;
+    this.parametrosReto.fases_seleccionadas = []; 
+    if (nivelId === 1) {
+      this.abrirEdicionAvanzada();
+    } else {
+      this.notificationService.show('Este nivel no tiene editor de mapas. Se usará el recorrido por defecto.', 'success');
+      this.siguientePaso2();
+    }
   }
 
   actividadDisponible(actividad: RetoPersonalizadoResponse): boolean {
@@ -526,7 +551,7 @@ export class PantallaPrincipalComponent implements OnInit {
         // B: Crear el reto personalizado dentro del aula recién creada
         const datosReto: RetoPersonalizadoCreate = {
           reto_nivel_id:        this.nivelSeleccionado,
-          titulo:               `${this.nuevoNombreAula} - Nivel ${this.nivelSeleccionado}`,
+          titulo: `${this.nivelesDisponibles.find(n => n.id === this.nivelSeleccionado)?.nombre || 'Nivel ' + this.nivelSeleccionado} (Fases: ${this.parametrosReto.fases_seleccionadas?.join('-') || 'Todas'})`,
           recompensa_estrellas: 5,
           parametros:           { ...this.parametrosReto, ayudas_habilitadas: false },
           fecha_limite:         fechaLimite
@@ -552,13 +577,14 @@ export class PantallaPrincipalComponent implements OnInit {
       
       this.aulasService.misAulas().subscribe({
         next: (aulas) => {
-          this.userProfile$.subscribe(profile => {
-            if (profile && profile.id) {
-              this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
-              // Seleccionamos automáticamente el aula para mostrar los participantes
-              if (!this.aulaSeleccionadaAdmin || this.aulaSeleccionadaAdmin !== this.aulaCreada!.id) {
-                this.seleccionarAulaAdmin(this.aulaCreada!.id);
-              }
+          this.userProfile$.pipe(
+            filter(p => !!p && !!p.id),
+            take(1)
+          ).subscribe(profile => {
+            this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
+            // Seleccionamos automáticamente el aula para mostrar los participantes
+            if (!this.aulaSeleccionadaAdmin || this.aulaSeleccionadaAdmin !== this.aulaCreada!.id) {
+              this.seleccionarAulaAdmin(this.aulaCreada!.id);
             }
           });
         },
@@ -708,10 +734,11 @@ export class PantallaPrincipalComponent implements OnInit {
 
     this.aulasService.misAulas().subscribe({
       next: (aulas) => {
-        this.userProfile$.subscribe(profile => {
-          if (profile && profile.id) {
-            this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
-          }
+        this.userProfile$.pipe(
+          filter(p => !!p && !!p.id),
+          take(1)
+        ).subscribe(profile => {
+          this.misAulasLista = aulas.filter(a => a.anfitrion_id === profile.id);
         });
       },
       error: () => this.notificationService.show('Error al cargar tus aulas', 'error')
@@ -858,7 +885,7 @@ export class PantallaPrincipalComponent implements OnInit {
     this.cargandoCrearAula = true;
     const datosReto: RetoPersonalizadoCreate = {
       reto_nivel_id:        this.nivelSeleccionado,
-      titulo:               `${this.aulaParaActividad.nombre_aula} - Actividad`,
+      titulo: `${this.nivelesDisponibles.find(n => n.id === this.nivelSeleccionado)?.nombre || 'Nivel ' + this.nivelSeleccionado} (Fases: ${this.parametrosReto.fases_seleccionadas?.join('-') || 'Todas'})`,
       recompensa_estrellas: 5,
       parametros:           { ...this.parametrosReto, ayudas_habilitadas: false },
       fecha_limite:         fechaLimite
